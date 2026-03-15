@@ -1,0 +1,31 @@
+{
+  "name": "Merka",
+  "short_name": "Merka",
+  "description": "Decentralized global marketplace on the Nostr protocol",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#3b82f6",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "categories": [
+    "shopping",
+    "social"
+  ],
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Feed Merka",
+      "url": "/?tab=merka",
+      "description": "Ver feed global do Merka"
+    }
+  ]
+}
