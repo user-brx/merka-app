@@ -62,7 +62,7 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
   };
 
   return (
-    <div className="modal-overlay" onClick={editing ? undefined : onClose} style={{ alignItems: 'center' }}>
+    <div className="modal-overlay" onClick={editing ? undefined : onClose}>
       <div className="modal-box profile-modal-box" onClick={e => e.stopPropagation()}>
         <div className="profile-modal-header">
           <div className="profile-avatar-placeholder">

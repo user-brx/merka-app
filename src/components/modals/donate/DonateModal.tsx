@@ -159,7 +159,8 @@ export function DonateModal({ lang, onClose }: DonateProps) {
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-box donate-modal-box" onClick={e => e.stopPropagation()}>
-                <div className="donate-header">
+                {/* Header — fixo, não rola */}
+                <div className="donate-header" style={{ flexShrink: 0 }}>
                     <div>
                         <h2 style={{ fontSize: '1.25rem' }}>{c.title}</h2>
                         <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: '.2rem' }}>{c.desc}</p>
@@ -167,45 +168,47 @@ export function DonateModal({ lang, onClose }: DonateProps) {
                     <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
                 </div>
 
-                {/* Tabs */}
-                <div className="donate-tabs">
-                    {(['lightning', 'btc', 'nostr'] as DonateTab[]).map(t => (
-                        <button key={t} className={`donate-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-                            {{ lightning: c.lightningTab, btc: c.btcTab, nostr: c.nostrTab }[t]}
-                        </button>
-                    ))}
+                {/* Conteúdo rolável */}
+                <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', minHeight: 0 }}>
+                  {/* Tabs */}
+                  <div className="donate-tabs">
+                      {(['lightning', 'btc', 'nostr'] as DonateTab[]).map(t => (
+                          <button key={t} className={`donate-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+                              {{ lightning: c.lightningTab, btc: c.btcTab, nostr: c.nostrTab }[t]}
+                          </button>
+                      ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="donate-content">
+                      {/* Real QR Code */}
+                      <div className="donate-qr-area" title={qrInfo[tab]} style={{ padding: '0.8rem', background: '#fff', borderRadius: '12px', display: 'inline-block', margin: '0 auto 1rem' }}>
+                          <QRCode
+                              value={qrInfo[tab]}
+                              size={160}
+                              style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                              viewBox={`0 0 160 160`}
+                          />
+                      </div>
+
+                      <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{tabDesc}</p>
+
+                      <div className="donate-address-row">
+                          <code className="donate-address">{tabValue}</code>
+                          <button className="btn-icon" onClick={() => copy(tabValue, tab)} style={{ flexShrink: 0 }}>
+                              {copied === tab
+                                  ? <span style={{ fontSize: '.65rem', color: 'var(--success)' }}>{c.copied}</span>
+                                  : <span>📋</span>
+                              }
+                          </button>
+                      </div>
+                  </div>
+
+                  {copied && <div style={{ textAlign: 'center', color: 'var(--success)', fontSize: '.82rem', fontWeight: 600 }}>{c.thanks}</div>}
                 </div>
 
-                {/* Content */}
-                <div className="donate-content">
-                    {/* Real QR Code */}
-                    <div className="donate-qr-area" title={qrInfo[tab]} style={{ padding: '0.8rem', background: '#fff', borderRadius: '12px', display: 'inline-block', margin: '0 auto 1rem' }}>
-                        <QRCode
-                            value={qrInfo[tab]}
-                            size={160}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                            viewBox={`0 0 160 160`}
-                        />
-                    </div>
-
-                    <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{tabDesc}</p>
-
-                    <div className="donate-address-row">
-                        <code className="donate-address">{tabValue}</code>
-                        <button className="btn-icon" onClick={() => copy(tabValue, tab)} style={{ flexShrink: 0 }}>
-                            {copied === tab
-                                ? <span style={{ fontSize: '.65rem', color: 'var(--success)' }}>{c.copied}</span>
-                                : <span>📋</span>
-                            }
-                        </button>
-                    </div>
-
-
-                </div>
-
-                {copied && <div style={{ textAlign: 'center', color: 'var(--success)', fontSize: '.82rem', fontWeight: 600 }}>{c.thanks}</div>}
-
-                <button onClick={onClose} style={{ width: '100%', background: 'linear-gradient(135deg,#f59e0b,#d97706)', marginTop: '.25rem' }}>
+                {/* Footer — fixo, não rola */}
+                <button onClick={onClose} style={{ width: '100%', background: 'linear-gradient(135deg,#f59e0b,#d97706)', marginTop: '1rem', flexShrink: 0 }}>
                     {c.close}
                 </button>
             </div>

@@ -76,8 +76,8 @@ function App() {
   }, []);
 
 
-  // Mobile header icons row — visible by default, user can collapse
-  const [navIconsVisible, setNavIconsVisible] = useState(true);
+  // Mobile header icons row — collapsed by default, user can expand
+  const [navIconsVisible, setNavIconsVisible] = useState(false);
 
   const [showRelayPanel, setShowRelayPanel] = useState(false);
   const relayPanelRef = useRef<HTMLDivElement>(null);
@@ -494,43 +494,42 @@ function App() {
           onClose={() => setShowNetworkPanel(false)}
         />
       )}
+      {profilePopupTarget && keys && (
+        <AuthorProfile
+          pubkey={profilePopupTarget.pubkey}
+          npub={profilePopupTarget.npub}
+          t={t}
+          onClose={() => setProfilePopupTarget(null)}
+          onFollow={() => { handleFollow(profilePopupTarget.pubkey); setProfilePopupTarget(null); }}
+          onUnfollow={() => { handleUnfollow(profilePopupTarget.pubkey); setProfilePopupTarget(null); }}
+          onChat={() => { openChat(profilePopupTarget.pubkey, profilePopupTarget.npub); setProfilePopupTarget(null); }}
+          onZap={() => { setZapTarget({ pubkey: profilePopupTarget.pubkey, npub: profilePopupTarget.npub }); setProfilePopupTarget(null); }}
+          isFollowed={followedPks.has(profilePopupTarget.pubkey)}
+          hasKeys={!!keys}
+        />
+      )}
 
       {/* Navigation bar */}
       <header className="top-nav">
-        <div className="brand" onClick={() => setShowAboutMerka(true)} style={{ cursor: 'pointer' }} title={t.aboutMerka}>
-          <div className="brand-icon">🌍</div>
-          <span className="brand-name">Merka</span>
-          <button
-            className="nav-icons-toggle"
-            onClick={(e) => { e.stopPropagation(); setNavIconsVisible(v => !v); }}
-            aria-label="Toggle menu icons"
-          >
-            {navIconsVisible ? '▲' : '▼'}
-          </button>
-        </div>
+        <div className="nav-top-line">
+          <div className="brand" onClick={() => setShowAboutMerka(true)} style={{ cursor: 'pointer' }} title={t.aboutMerka}>
+            <div className="brand-icon">🌍</div>
+            <span className="brand-name">Merka</span>
+          </div>
 
-        <div className={`nav-controls${navIconsVisible ? '' : ' icons-hidden'}`}>
-          <button className="btn-icon nav-info-btn" onClick={() => setShowAboutNostr(true)} title={t.whatIsNostr}>
-            <span className="nav-icon-char">🔮</span>
-          </button>
-          <button className="btn-icon nav-info-btn" onClick={() => setShowWalletGuide(true)} title={t.walletGuide}>
-            <span className="nav-icon-char btc-icon">₿</span>
-          </button>
-          <button className="btn-icon nav-info-btn" onClick={() => setShowDonate(true)} title={t.donate}>
-            <span className="nav-icon-char">❤️</span>
-          </button>
-          <button className="btn-icon" onClick={() => setShowChatHistory(true)} title={t.chatHistoryTitle} style={{ position: 'relative' }}>
-            <ChatHistoryIcon />
-            {unreadPks.size > 0 && (
-              <span style={{
-                position: 'absolute', top: -2, right: -2, width: 8, height: 8,
-                background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-color)'
-              }} />
-            )}
-          </button>
+          {/* ── Linha 1: sempre visível — nostr, btc, apoiar, relays, idioma ── */}
+          <div className="nav-controls nav-primary-row">
+            <button className="btn-icon nav-info-btn" onClick={() => setShowAboutNostr(true)} title={t.whatIsNostr}>
+              <span className="nav-icon-char">🔮</span>
+            </button>
+            <button className="btn-icon nav-info-btn" onClick={() => setShowWalletGuide(true)} title={t.walletGuide}>
+              <span className="nav-icon-char btc-icon">₿</span>
+            </button>
+            <button className="btn-icon nav-info-btn" onClick={() => setShowDonate(true)} title={t.donate}>
+              <span className="nav-icon-char">❤️</span>
+            </button>
 
-          <div className="header-profile-sm">
-            {/* Relay status button — click opens relay panel */}
+            {/* Relay status */}
             <div ref={relayPanelRef} style={{ position: 'relative' }}>
               <button
                 className="relay-status-btn"
@@ -546,8 +545,6 @@ function App() {
                     : t.listening}
                 </span>
               </button>
-
-              {/* Relay panel popup */}
               {showRelayPanel && (
                 <div className="relay-panel" onClick={e => e.stopPropagation()}>
                   <div className="relay-panel-header">
@@ -573,38 +570,7 @@ function App() {
               )}
             </div>
 
-            {keys && (
-              <>
-                <div className="nav-sep" />
-                <button className="btn-profile-sm" onClick={() => setShowNetworkPanel(true)} title={`${t.followers}/${t.following}`}>
-                  <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>👥</span>
-                </button>
-                <div className="nav-sep" />
-                <button className="btn-profile-sm" onClick={() => setShowProfileModal(true)} title={t.editProfile}>
-                  <EditIcon />
-                </button>
-                <div className="nav-sep" />
-                <div style={{ position: 'relative' }}>
-                  <button className="btn-profile-sm" onClick={() => setShowLogoutConfirm(true)} title={t.logout}>
-                    <LogoutIcon />
-                  </button>
-                  {showLogoutConfirm && (
-                    <div className="logout-confirm-popup" onClick={e => e.stopPropagation()}>
-                      <p className="logout-confirm-msg">{t.logoutConfirmMsg}</p>
-                      <div className="logout-confirm-actions">
-                        <button className="logout-confirm-btn-cancel" onClick={() => setShowLogoutConfirm(false)}>
-                          {t.cancel}
-                        </button>
-                        <button className="logout-confirm-btn-ok" onClick={() => { setShowLogoutConfirm(false); handleLogout(); }}>
-                          {t.logoutConfirmBtn}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-            <div className="nav-sep" />
+            {/* Idioma */}
             <div ref={langDropdownRef} style={{ position: 'relative' }}>
               <button
                 className="lang-select-inline"
@@ -635,7 +601,59 @@ function App() {
               )}
             </div>
           </div>
+
+          <button
+            className="nav-icons-toggle"
+            onClick={(e) => { e.stopPropagation(); setNavIconsVisible(v => !v); }}
+            aria-label="Toggle menu icons"
+          >
+            {navIconsVisible ? '▲' : '▼'}
+          </button>
         </div>
+
+        {/* ── Linha 2: expandível — chat, seguidores, perfil, sair ── */}
+        <div className={`nav-controls nav-secondary-row${navIconsVisible ? '' : ' icons-hidden'}`}>
+            {keys && (
+              <>
+                <button className="btn-icon" onClick={() => setShowChatHistory(true)} title={t.chatHistoryTitle} style={{ position: 'relative' }}>
+                  <ChatHistoryIcon />
+                  {unreadPks.size > 0 && (
+                    <span style={{
+                      position: 'absolute', top: -2, right: -2, width: 8, height: 8,
+                      background: 'var(--danger)', borderRadius: '50%', border: '2px solid var(--bg-color)'
+                    }} />
+                  )}
+                </button>
+                <div className="nav-sep" />
+                <button className="btn-profile-sm" onClick={() => setShowNetworkPanel(true)} title={`${t.followers}/${t.following}`}>
+                  <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>👥</span>
+                </button>
+                <div className="nav-sep" />
+                <button className="btn-profile-sm" onClick={() => setShowProfileModal(true)} title={t.editProfile}>
+                  <EditIcon />
+                </button>
+                <div className="nav-sep" />
+                <div style={{ position: 'relative' }}>
+                  <button className="btn-profile-sm" onClick={() => setShowLogoutConfirm(true)} title={t.logout}>
+                    <LogoutIcon />
+                  </button>
+                  {showLogoutConfirm && (
+                    <div className="logout-confirm-popup" onClick={e => e.stopPropagation()}>
+                      <p className="logout-confirm-msg">{t.logoutConfirmMsg}</p>
+                      <div className="logout-confirm-actions">
+                        <button className="logout-confirm-btn-cancel" onClick={() => setShowLogoutConfirm(false)}>
+                          {t.cancel}
+                        </button>
+                        <button className="logout-confirm-btn-ok" onClick={() => { setShowLogoutConfirm(false); handleLogout(); }}>
+                          {t.logoutConfirmBtn}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
       </header>
 
       <main className={`main-content-layout${!keys ? ' auth-mode' : ''}`}>
@@ -679,20 +697,6 @@ function App() {
               />
             </div>
           </aside>
-        )}
-        {profilePopupTarget && keys && (
-          <AuthorProfile
-            pubkey={profilePopupTarget.pubkey}
-            npub={profilePopupTarget.npub}
-            t={t}
-            onClose={() => setProfilePopupTarget(null)}
-            onFollow={() => { handleFollow(profilePopupTarget.pubkey); setProfilePopupTarget(null); }}
-            onUnfollow={() => { handleUnfollow(profilePopupTarget.pubkey); setProfilePopupTarget(null); }}
-            onChat={() => { openChat(profilePopupTarget.pubkey, profilePopupTarget.npub); setProfilePopupTarget(null); }}
-            onZap={() => { setZapTarget({ pubkey: profilePopupTarget.pubkey, npub: profilePopupTarget.npub }); setProfilePopupTarget(null); }}
-            isFollowed={followedPks.has(profilePopupTarget.pubkey)}
-            hasKeys={!!keys}
-          />
         )}
       </main>
     </div>

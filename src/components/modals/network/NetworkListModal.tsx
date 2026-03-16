@@ -77,7 +77,7 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
 
     return (
         <div className="modal-overlay" style={{ zIndex: 50 }}>
-            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 420, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80vh' }}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80dvh' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 1.2rem 0.6rem 1.2rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem' }}>👥 {t.networkTitle || 'Network'}</h3>
                     <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>

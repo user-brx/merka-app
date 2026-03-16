@@ -13,7 +13,7 @@ export function ChatHistoryPanel({
 }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 380 }}>
+      <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(380px, 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.75rem' }}>
           <h3>🔐 {t.chatHistoryTitle}</h3>
           <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>

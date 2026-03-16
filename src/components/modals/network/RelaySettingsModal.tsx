@@ -65,7 +65,7 @@ export function RelaySettingsModal({ t, keys, onClose }: RelaySettingsModalProps
     return (
         // Sem onClick no overlay — modal de configuração não pode fechar acidentalmente
         <div className="modal-overlay" style={{ zIndex: 60 }}>
-            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(450px, 100%)' }}>
                 <div className="about-nostr-header">
                     <div>
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{t.relaySettings || '🌐 Relay Settings'}</h2>

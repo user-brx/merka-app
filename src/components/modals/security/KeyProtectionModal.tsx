@@ -21,7 +21,7 @@ export function KeyProtectionModal({ t, onProtect, onSkip }: KeyProtectionModalP
 
     return (
         <div className="modal-overlay">
-            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 420, borderColor: 'rgba(139,92,246,.35)' }}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(420px, 100%)', borderColor: 'rgba(139,92,246,.35)' }}>
                 <h3 style={{ color: 'var(--purple)', marginBottom: '.5rem' }}>
                     🔐 {t.protectKeyTitle ?? 'Protect Your Key'}
                 </h3>

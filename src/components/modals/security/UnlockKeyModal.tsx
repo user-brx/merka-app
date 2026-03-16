@@ -19,7 +19,7 @@ export function UnlockKeyModal({ t, onUnlock, onUseOtherKey, error }: UnlockKeyM
 
     return (
         <div className="modal-overlay">
-            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 400, borderColor: 'rgba(139,92,246,.35)' }}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(400px, 100%)', borderColor: 'rgba(139,92,246,.35)' }}>
                 <h3 style={{ color: 'var(--purple)', marginBottom: '.5rem' }}>
                     🔐 {t.unlockTitle ?? 'Unlock Account'}
                 </h3>

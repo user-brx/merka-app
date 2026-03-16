@@ -103,13 +103,18 @@ body {
 /* ── Nav ── */
 .top-nav {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   padding: 0;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  /* Changed from nowrap to handle small screens better */
+  gap: 0;
   min-height: 0;
+}
+
+/* Line 1: brand + primary buttons on same row */
+.nav-top-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .brand {
@@ -157,10 +162,31 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
-  /* Changed to wrap to avoid squeezing icons */
+}
+
+/* Linha primária — ocupa espaço restante à direita do brand */
+.nav-primary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   flex: 1;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Linha secundária — abaixo do top-line, sempre visível no desktop */
+.nav-secondary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-top: 0.2rem;
+}
+
+/* Toggle visível apenas no mobile (hidden no desktop via media query) */
+.nav-icons-toggle {
+  display: none;
 }
 
 /* ── Lang/Tag dropdown thin scrollbar ── */
@@ -228,11 +254,6 @@ body {
 .tag-select option {
   background: var(--bg-color);
   color: var(--text-main);
-}
-
-/* Mobile header icons toggle — hidden on desktop, visible on mobile */
-.nav-icons-toggle {
-  display: none;
 }
 
 /* Nav separator (1px vertical line between button groups) */
@@ -1068,7 +1089,7 @@ textarea {
 /* Chat modal */
 .chat-modal-box {
   max-width: 460px;
-  height: min(80vh, 540px);
+  height: min(80dvh, 540px);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1690,7 +1711,7 @@ textarea {
   background: rgba(0, 0, 0, 0.6);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
-  z-index: 999;
+  z-index: 3500;
 }
 
 .author-profile-popup {
@@ -1698,7 +1719,7 @@ textarea {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000;
+  z-index: 3600;
   width: min(340px, 90vw);
   background: #0f1624;
   border: 1px solid rgba(59, 130, 246, 0.3);
@@ -2066,7 +2087,7 @@ textarea {
   }
 
   .profile-modal-box {
-    max-height: 95vh;
+    max-height: 95dvh;
   }
 }
 
@@ -2081,19 +2102,20 @@ textarea {
     padding: 0.85rem;
   }
 
-  /* ── Mobile header: 2 linhas (brand + ícones colapsáveis) ── */
+  /* ── Mobile header: 2 linhas (brand+botões / expandível) ── */
   .top-nav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
     padding: 0.1rem 0;
   }
 
-  /* Linha 1: brand fica full-width com toggle na direita */
+  /* Linha 1: brand + primary row na mesma linha */
+  .nav-top-line {
+    width: 100%;
+  }
+
   .brand {
     justify-content: flex-start;
-    width: 100%;
     gap: 0.35rem;
+    flex-shrink: 0;
   }
 
   .brand-icon {
@@ -2109,12 +2131,22 @@ textarea {
     white-space: nowrap;
   }
 
-  /* Botão toggle visível só no mobile */
+  /* Linha 1: primary row ocupa espaço restante à direita do brand */
+  .nav-primary-row {
+    flex: 1;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.2rem;
+    overflow: visible;
+  }
+
+  /* Toggle visível no mobile */
   .nav-icons-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    flex-shrink: 0;
     background: rgba(255, 255, 255, .04);
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -2123,7 +2155,6 @@ textarea {
     padding: 0.15rem 0.55rem;
     min-height: 28px;
     cursor: pointer;
-    flex-shrink: 0;
     transition: background 0.15s;
   }
 
@@ -2131,21 +2162,21 @@ textarea {
     background: rgba(255, 255, 255, .08);
   }
 
-  /* Linha 2: ícones em linha horizontal, left-aligned para não clicar à esquerda.
-     overflow: visible permite que popups (relay-panel, logout-confirm) escapem */
-  .nav-controls {
+  /* Linha 2 — expandível: chat, seguidores, perfil, sair */
+  .nav-secondary-row {
+    width: 100%;
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-items: center;
     gap: 0.2rem;
-    max-height: 120px;
+    max-height: 50px;
     overflow: visible;
     transition: max-height 0.25s ease-out, opacity 0.2s ease, padding 0.2s ease;
     opacity: 1;
     padding-top: 0.2rem;
   }
 
-  .nav-controls.icons-hidden {
+  .nav-secondary-row.icons-hidden {
     max-height: 0;
     overflow: hidden;
     opacity: 0;
@@ -2185,17 +2216,6 @@ textarea {
     font-size: 0.62rem;
     padding: 0.1rem 0.25rem;
     min-height: 36px;
-  }
-
-  /* header-profile-sm: sem borda/fundo no mobile — só um grupo flat de ícones */
-  .header-profile-sm {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    flex: 0 0 auto;
-    flex-wrap: nowrap;
-    gap: 0.2rem;
   }
 
   .feed-tabs-row {
@@ -2260,19 +2280,64 @@ textarea {
     /* fallback */
   }
 
-  /* Modais em mobile */
+  /* Modais em mobile — bottom sheet ancorado na parte inferior do viewport visível */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .modal-box {
-    max-width: 92vw;
-    /* Use vw to guarantee fit */
+    position: relative;
     width: 100%;
-    /* Take full width up to max-width */
-    margin: 0 auto;
-    padding: 1.1rem;
-    border-radius: 14px;
-    max-height: 90vh;
+    max-width: 100%;
+    max-height: 92dvh;
+    height: auto;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    padding: 1.75rem 1.1rem max(1.25rem, env(safe-area-inset-bottom));
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Drag handle — absolutamente posicionado, fora do fluxo flex */
+  .modal-box::before {
+    content: '';
+    position: absolute;
+    top: 0.55rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: rgba(139, 92, 246, 0.5);
+    border-radius: 2px;
+    z-index: 2;
+  }
+
+  /* Chat modal mantém altura fixa no mobile */
+  .chat-modal-box {
+    height: min(80dvh, 540px);
+    max-height: 80dvh;
+    max-width: 100%;
+  }
+
+  /* Profile modal: sticky header + scroll body + sticky footer */
+  .profile-modal-box {
+    overflow: hidden;
+  }
+
+  .profile-modal-header {
+    flex-shrink: 0;
+  }
+
+  .profile-modal-body {
+    flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
-    /* Prevenir scroll horizontal interno */
+    min-height: 0;
+  }
+
+  .profile-modal-actions {
+    flex-shrink: 0;
   }
 
   .about-nostr-box,
@@ -2281,7 +2346,7 @@ textarea {
     max-width: 92vw;
     width: 100%;
     margin: 0 auto;
-    max-height: 90vh;
+    max-height: 90dvh;
   }
 
   /* Post form em mobile */
@@ -2320,6 +2385,58 @@ textarea {
       padding-right: max(0.75rem, env(safe-area-inset-right));
       padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
+  }
+}
+
+/* ── Author Profile Popup: bottom sheet no mobile ── */
+@media (max-width: 600px) {
+  .profile-modal-overlay {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .author-profile-popup {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 1.75rem 1rem max(1rem, env(safe-area-inset-bottom));
+    max-height: 85dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: slideUp .2s ease;
+  }
+
+  /* Drag handle roxo — igual aos modais */
+  .author-profile-popup::before {
+    content: '';
+    position: absolute;
+    top: 0.55rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: rgba(139, 92, 246, 0.5);
+    border-radius: 2px;
+    z-index: 2;
+  }
+}
+
+/* Prevenir zoom automático do iOS Safari em inputs (font-size < 16px dispara zoom) */
+@media (max-width: 600px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="password"],
+  input[type="email"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }
 
