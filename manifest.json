@@ -2,7 +2,8 @@
   "name": "Merka",
   "short_name": "Merka",
   "description": "Decentralized global marketplace on the Nostr protocol",
-  "start_url": "/",
+  "start_url": "/merka-app/",
+  "scope": "/merka-app/",
   "display": "standalone",
   "background_color": "#0b0f19",
   "theme_color": "#3b82f6",
@@ -14,9 +15,9 @@
   ],
   "icons": [
     {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/merka-app/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
@@ -24,7 +25,7 @@
   "shortcuts": [
     {
       "name": "Feed Merka",
-      "url": "/?tab=merka",
+      "url": "/merka-app/?tab=merka",
       "description": "Ver feed global do Merka"
     }
   ]
