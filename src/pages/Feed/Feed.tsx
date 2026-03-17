@@ -11,6 +11,7 @@ import {
   fetchNotesBatch
 } from '../../services/nostr/nostr';
 import { APP_GUID, MERKA_PUBKEY } from '../../config/constants';
+import { CopyIcon } from '../../components/ui/icons';
 
 export interface FeedProps {
   t: Translations;
@@ -305,15 +306,30 @@ export function Feed({
   return (
     <>
       <section className="glass-panel panel-collapsible" style={{ padding: collapsePostForm ? '.45rem 1.2rem' : '.8rem 1.2rem' }}>
-        <div className="panel-collapse-header" onClick={() => setCollapsePostForm(v => !v)}>
+        <div className="panel-collapse-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <span className="panel-collapse-label">✏️ {t.post}</span>
+            <span className="panel-collapse-label">{t.post}</span>
             {friendlyName && (
               <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{friendlyName}</span>
             )}
             <span style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{truncateKey(keys.npub)}</span>
+            <button
+              type="button"
+              aria-label={t.copied}
+              onClick={() => navigator.clipboard.writeText(keys.npub).then(() => showGlobalToast(t.copied))}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
+            >
+              <CopyIcon />
+            </button>
           </div>
-          <span className={`panel-toggle-chevron${collapsePostForm ? ' collapsed' : ''}`}>▲</span>
+          <button
+            type="button"
+            className="panel-toggle-btn"
+            aria-label="toggle post form"
+            onClick={() => setCollapsePostForm(v => !v)}
+          >
+            <span className={`panel-toggle-chevron${collapsePostForm ? ' collapsed' : ''}`}>▲</span>
+          </button>
         </div>
         {!collapsePostForm && <>
           <form className="post-form" onSubmit={handlePost} style={{ marginTop: '.4rem' }}>

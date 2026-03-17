@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Translations } from '../../../i18n/translations';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 import { nip19 } from 'nostr-tools';
 import { fetchFollowers, fetchProfile } from '../../../services/nostr/nostr';
 import { AuthorProfile } from '../../feed/NoteCard';
@@ -16,6 +17,7 @@ interface NetworkListModalProps {
 }
 
 export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, onUnfollow, onOpenChat, onOpenZap }: NetworkListModalProps) {
+    const dragProps = useDragToClose(onClose);
     const [activeTab, setActiveTab] = useState<'followers' | 'following'>('following');
     const [followersPks, setFollowersPks] = useState<string[]>([]);
     const [loadingFollowers, setLoadingFollowers] = useState(true);
@@ -24,6 +26,9 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
     const [searchInput, setSearchInput] = useState('');
     const [searchPk, setSearchPk] = useState<string | null>(null);
     const [searchNotFound, setSearchNotFound] = useState(false);
+
+    // Profiles cache — populated as rows load, used for text filtering
+    const [profiles, setProfiles] = useState<Record<string, Record<string, string>>>({});
 
     // Filter out self from following
     const followingPks = Array.from(followedPks).filter(pk => pk !== myKeys?.pk);
@@ -39,10 +44,24 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
 
     const displayPks = activeTab === 'followers' ? followersPks : followingPks;
 
+    // Dual-mode search: npub/hex → relay lookup | plain text → live filter
+    const raw = searchInput.trim();
+    const isKeySearch = raw.startsWith('npub1') || /^[0-9a-f]{64}$/i.test(raw);
+    const isTextSearch = raw.length >= 2 && !isKeySearch;
+
+    const filteredDisplayPks = isTextSearch
+        ? displayPks.filter(pk => {
+            const p = profiles[pk];
+            if (!p) return true; // profile not yet loaded — keep visible
+            const haystack = [p.name, p.display_name, p.nip05, p.about]
+                .filter(Boolean).join(' ').toLowerCase();
+            return haystack.includes(raw.toLowerCase());
+        })
+        : displayPks;
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        const raw = searchInput.trim();
-        if (!raw) return;
+        if (!raw || isTextSearch) return; // text search is live — no submit needed
 
         setSearchNotFound(false);
         setSearchPk(null);
@@ -64,8 +83,6 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
             return;
         }
 
-        // Pubkey válido — mostrar NetworkUserRow diretamente.
-        // O próprio componente busca o perfil via fetchProfile interno.
         setSearchPk(pk);
     };
 
@@ -75,9 +92,15 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
         setSearchNotFound(false);
     };
 
+    const tabCount = (tab: 'followers' | 'following') => {
+        const base = tab === 'followers' ? followersPks.length : followingPks.length;
+        if (isTextSearch && tab === activeTab) return filteredDisplayPks.length;
+        return base;
+    };
+
     return (
         <div className="modal-overlay" style={{ zIndex: 50 }}>
-            <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80dvh' }}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80dvh' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 1.2rem 0.6rem 1.2rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.25rem' }}>👥 {t.networkTitle || 'Network'}</h3>
                     <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>
@@ -89,15 +112,15 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                         <input
                             type="text"
                             value={searchInput}
-                            onChange={e => { setSearchInput(e.target.value); setSearchNotFound(false); }}
-                            placeholder={t.searchUserPlaceholder || 'npub1... or hex pubkey'}
+                            onChange={e => { setSearchInput(e.target.value); setSearchNotFound(false); if (!e.target.value.trim()) setSearchPk(null); }}
+                            placeholder={t.searchUserPlaceholder || 'name, nip05 or npub1...'}
                             style={{
                                 flex: 1, padding: '0.5rem 0.75rem', borderRadius: '8px',
                                 border: searchNotFound ? '1px solid var(--danger)' : '1px solid rgba(255,255,255,0.1)',
                                 background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '0.85rem'
                             }}
                         />
-                        {searchPk ? (
+                        {(searchPk || isTextSearch) ? (
                             <button type="button" onClick={clearSearch}
                                 style={{ padding: '0 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
                                 ✕
@@ -120,7 +143,8 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                                 isFollowed={followedPks.has(searchPk)} hasKeys={!!myKeys}
                                 onFollow={() => onFollow(searchPk)} onUnfollow={() => onUnfollow(searchPk)}
                                 onOpenChat={(pubkey: string, npub: string) => { onClose(); onOpenChat(pubkey, npub); }}
-                                onOpenZap={(pubkey: string, npub: string, noteId?: string, lud16?: string) => { onClose(); onOpenZap(pubkey, npub, noteId, lud16); }} />
+                                onOpenZap={(pubkey: string, npub: string, noteId?: string, lud16?: string) => { onClose(); onOpenZap(pubkey, npub, noteId, lud16); }}
+                                onProfileLoaded={(p) => setProfiles(prev => ({ ...prev, [searchPk]: p }))} />
                         </div>
                     )}
                 </div>
@@ -136,7 +160,7 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                             cursor: 'pointer', transition: 'all 0.2s'
                         }}
                     >
-                        {t.followers || 'Followers'} ({loadingFollowers ? '...' : followersPks.length})
+                        {t.followers || 'Followers'} ({loadingFollowers ? '...' : tabCount('followers')})
                     </button>
                     <button
                         onClick={() => setActiveTab('following')}
@@ -148,25 +172,28 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                             cursor: 'pointer', transition: 'all 0.2s'
                         }}
                     >
-                        {t.following || 'Following'} ({followingPks.length})
+                        {t.following || 'Following'} ({tabCount('following')})
                     </button>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.2rem 1.2rem 1.2rem', minHeight: '200px' }}>
                     {activeTab === 'followers' && loadingFollowers ? (
                         <p style={{ textAlign: 'center', opacity: .5, padding: '2rem 0' }}>{t.loading || 'Loading...'}</p>
-                    ) : displayPks.length === 0 ? (
+                    ) : filteredDisplayPks.length === 0 ? (
                         <p style={{ textAlign: 'center', opacity: .5, padding: '2rem 0' }}>
-                            {activeTab === 'following' ? t.noFollowing : 'Nenhum seguidor ainda.'}
+                            {isTextSearch
+                                ? (t.noSearchResult || 'No users match your search')
+                                : activeTab === 'following' ? t.noFollowing : 'Nenhum seguidor ainda.'}
                         </p>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
-                            {displayPks.map(pk => (
+                            {filteredDisplayPks.map(pk => (
                                 <NetworkUserRow key={pk} pk={pk} t={t}
                                     isFollowed={followedPks.has(pk)} hasKeys={!!myKeys}
                                     onFollow={() => onFollow(pk)} onUnfollow={() => onUnfollow(pk)}
                                     onOpenChat={(pubkey: string, npub: string) => { onClose(); onOpenChat(pubkey, npub); }}
-                                    onOpenZap={(pubkey: string, npub: string, noteId?: string, lud16?: string) => { onClose(); onOpenZap(pubkey, npub, noteId, lud16); }} />
+                                    onOpenZap={(pubkey: string, npub: string, noteId?: string, lud16?: string) => { onClose(); onOpenZap(pubkey, npub, noteId, lud16); }}
+                                    onProfileLoaded={(p) => setProfiles(prev => ({ ...prev, [pk]: p }))} />
                             ))}
                         </div>
                     )}
@@ -185,14 +212,18 @@ interface NetworkUserRowProps {
     onUnfollow: () => void;
     onOpenChat: (pubkey: string, npub: string) => void;
     onOpenZap: (pubkey: string, npub: string, noteId?: string, lud16?: string) => void;
+    onProfileLoaded?: (profile: Record<string, string>) => void;
 }
 
-function NetworkUserRow({ pk, t, isFollowed, hasKeys, onFollow, onUnfollow, onOpenChat, onOpenZap }: NetworkUserRowProps) {
+function NetworkUserRow({ pk, t, isFollowed, hasKeys, onFollow, onUnfollow, onOpenChat, onOpenZap, onProfileLoaded }: NetworkUserRowProps) {
     const [profile, setProfile] = useState<Record<string, string>>({});
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
-        fetchProfile(pk, p => setProfile(p));
+        fetchProfile(pk, p => {
+            setProfile(p);
+            onProfileLoaded?.(p);
+        });
     }, [pk]);
 
     const npub = nip19.npubEncode(pk);

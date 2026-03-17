@@ -1,4 +1,5 @@
 import type { LangCode } from '../../../i18n/translations';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 
 const content: Record<LangCode, {
     title: string; tagline: string;
@@ -207,9 +208,10 @@ interface AboutNostrProps { lang: LangCode; onClose: () => void; }
 
 export function AboutNostr({ lang, onClose }: AboutNostrProps) {
     const c = content[lang] || content.en;
+    const dragProps = useDragToClose(onClose);
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 <div className="about-nostr-header">
                     <div>
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{c.title}</h2>

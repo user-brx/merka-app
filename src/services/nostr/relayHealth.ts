@@ -20,7 +20,7 @@ export const DEFAULT_RELAYS: RelayConfig[] = [
   { url: 'wss://relay.primal.net', name: 'Primal' },
   { url: 'wss://nos.lol', name: 'nos.lol' },
   { url: 'wss://nostr.wine', name: 'Nostr.wine' },
-  { url: 'wss://relay.nostr.band', name: 'Nostr.band' },
+  { url: 'wss://purplepag.es', name: 'Purplepages' },
   { url: 'wss://relay.snort.social', name: 'Snort' },
 ];
 
@@ -42,7 +42,7 @@ let _lastFallbackTime = 0;
 
 const TRUSTED_RELAY_DOMAINS = [
   'relay.damus.io', 'relay.primal.net', 'nos.lol', 'nostr.wine',
-  'relay.nostr.band', 'relay.snort.social', 'relay.nostr.info',
+  'purplepag.es', 'relay.snort.social', 'relay.nostr.info',
   'nostr.fmt.wiz.biz', 'relay.current.fyi', 'purplepag.es',
   'relay.bitcoiner.social', 'nostr.oxtr.dev', 'relay.nostr.bg',
   'nostr-pub.wellorder.net', 'nostr.mom',

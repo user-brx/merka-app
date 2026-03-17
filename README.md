@@ -31,7 +31,7 @@ No accounts with companies. No phone numbers. No email addresses. Just your cryp
 | 📦 **Buy & Sell** | Post marketplace listings on the Nostr network tagged with `#Merka` |
 | 🌍 **Global Feed** | Browse real-time listings from traders around the world |
 | 👥 **Follow Network** | Build a personal network of trusted buyers and sellers |
-| 🔍 **Search Users** | Find any user by `npub` or hex pubkey and follow them instantly |
+| 🔍 **Search Users** | Find any user by `npub`, hex pubkey, name, NIP-05 address or bio text |
 | 🔐 **Private Messaging** | End-to-end encrypted direct messages (NIP-17 + NIP-44) |
 | 🔍 **Search** | Full-text search across the decentralized network (NIP-50) |
 | 🌐 **15 Languages** | Fully localized: EN, PT, ES, IT, DE, HI, JA, ZH, AR, RU, FR, TR, FA, VI, UK |
@@ -90,7 +90,7 @@ Merka is built entirely on open standards and open-source libraries, with **no e
 | [@testing-library/user-event](https://testing-library.com/docs/user-event/intro) | Realistic user interaction simulation |
 | jsdom | Browser environment for tests |
 
-**Coverage:** 347 tests across 10 test files covering all Nostr protocol functions, UI components, modals, i18n completeness (15 languages), and security boundaries.
+**Coverage:** 351 tests across 11 test files covering all Nostr protocol functions, UI components, modals, hooks, i18n completeness (15 languages), and security boundaries.
 
 ```bash
 npm test              # run all tests
@@ -101,7 +101,7 @@ npm run test:coverage # coverage report
 ### Relays (default)
 
 Merka connects to 6 well-known public relays by default:
-`relay.damus.io`, `relay.primal.net`, `nos.lol`, `nostr.wine`, `relay.nostr.band`, `relay.snort.social`
+`relay.damus.io`, `relay.primal.net`, `nos.lol`, `nostr.wine`, `purplepag.es`, `relay.snort.social`
 
 ---
 

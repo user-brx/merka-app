@@ -1,4 +1,5 @@
 import type { LangCode } from '../../../i18n/translations';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 
 // ── Wallet data ──────────────────────────────────────────────────────────────
 const wallets = [
@@ -246,6 +247,7 @@ interface WalletGuideProps {
 export function WalletGuide({ lang, onClose }: WalletGuideProps) {
     const c = content[lang] ?? content.en!;
     const isRTL = lang === 'ar';
+    const dragProps = useDragToClose(onClose);
 
     const levelLabel = (level: string) => {
         const map: Record<string, string> = {
@@ -262,6 +264,7 @@ export function WalletGuide({ lang, onClose }: WalletGuideProps) {
             <div
                 className="modal-box about-nostr-box wallet-guide-box"
                 onClick={e => e.stopPropagation()}
+                {...dragProps}
             >
                 {/* Header */}
                 <div className="about-nostr-header">

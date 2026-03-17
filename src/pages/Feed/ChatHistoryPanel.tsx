@@ -1,4 +1,5 @@
 import type { Translations } from '../../i18n/translations';
+import { useDragToClose } from '../../hooks/useDragToClose';
 
 export interface ChatContact { pubkey: string; npub: string; label: string; }
 
@@ -11,9 +12,10 @@ export function ChatHistoryPanel({
   onOpenChat: (c: ChatContact) => void;
   onClose: () => void;
 }) {
+  const dragProps = useDragToClose(onClose);
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(380px, 100%)' }}>
+      <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(380px, 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.75rem' }}>
           <h3>🔐 {t.chatHistoryTitle}</h3>
           <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>

@@ -61,6 +61,9 @@ const t = {
     close: 'Fechar',
     bitcoinOnchain: 'Bitcoin On-chain',
     bitcoinScanToPay: 'Escaneie o QR com uma carteira Bitcoin:',
+    zapTabLightning: 'Lightning',
+    zapTabBitcoin: 'Bitcoin',
+    webLnNotFound: 'WebLN not found',
 } as unknown as Translations;
 
 type RenderProps = {

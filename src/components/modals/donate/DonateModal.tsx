@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import type { LangCode } from '../../../i18n/translations';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 
 interface DonateProps {
     lang: LangCode;
@@ -140,6 +141,7 @@ export function DonateModal({ lang, onClose }: DonateProps) {
     const c = content[lang as keyof typeof content] || content.en;
     const [tab, setTab] = useState<DonateTab>('lightning');
     const [copied, setCopied] = useState('');
+    const dragProps = useDragToClose(onClose);
 
     const copy = (text: string, key: string) => {
         navigator.clipboard.writeText(text);
@@ -158,7 +160,7 @@ export function DonateModal({ lang, onClose }: DonateProps) {
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box donate-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-box donate-modal-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 {/* Header — fixo, não rola */}
                 <div className="donate-header" style={{ flexShrink: 0 }}>
                     <div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type { Translations } from '../../i18n/translations';
 import { CopyIcon, ZapIcon } from '../../components/ui/icons';
+import { useDragToClose } from '../../hooks/useDragToClose';
 import { getLnurlEndpoint, fetchLnurlPayMetadata, createZapRequest, fetchZapInvoice } from '../../services/nostr/zap';
 import { fetchProfile } from '../../services/nostr/nostr';
 
@@ -25,6 +26,7 @@ export interface ZapModalProps {
 }
 
 export function ZapModal({ t, targetNpub, targetPubkey, noteId, lud16: propLud16, myKeys, onClose }: ZapModalProps) {
+  const dragProps = useDragToClose(onClose);
   const [copied, setCopied] = useState(false);
   const [lud16, setLud16] = useState<string | undefined>(propLud16);
   const [bitcoinAddr, setBitcoinAddr] = useState<string | undefined>(undefined);
@@ -83,7 +85,7 @@ export function ZapModal({ t, targetNpub, targetPubkey, noteId, lud16: propLud16
         await window.webln.sendPayment(invoice);
         onClose();
       } else {
-        alert('WebLN not found. Please install a Lightning wallet extension like Alby.');
+        alert(t.webLnNotFound ?? 'WebLN not found. Please install a Lightning wallet extension like Alby.');
       }
     } catch (err) {
       console.error('WebLN error', err);
@@ -95,7 +97,7 @@ export function ZapModal({ t, targetNpub, targetPubkey, noteId, lud16: propLud16
   return (
     // Sem onClick no overlay — modal de pagamento só fecha via botão
     <div className="modal-overlay">
-      <div className="modal-box zap-modal-box" onClick={e => e.stopPropagation()}>
+      <div className="modal-box zap-modal-box" onClick={e => e.stopPropagation()} {...dragProps}>
         {/* Header — fixo, não rola */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.5rem', flexShrink: 0 }}>
           <h3 style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '.5rem', margin: 0 }}>

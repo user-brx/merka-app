@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Translations } from '../../../i18n/translations';
 import { RELAY_CONFIGS, DEFAULT_RELAYS, updateRelays, subscribeRelayStatus, type RelayState, publishNip65Relays } from '../../../services/nostr/nostr';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 
 interface RelaySettingsModalProps {
     t: Translations;
@@ -9,6 +10,7 @@ interface RelaySettingsModalProps {
 }
 
 export function RelaySettingsModal({ t, keys, onClose }: RelaySettingsModalProps) {
+    const dragProps = useDragToClose(onClose);
     const [relays, setRelays] = useState<RelayState[]>([]);
     const [newUrl, setNewUrl] = useState('');
     const [error, setError] = useState('');
@@ -65,7 +67,7 @@ export function RelaySettingsModal({ t, keys, onClose }: RelaySettingsModalProps
     return (
         // Sem onClick no overlay — modal de configuração não pode fechar acidentalmente
         <div className="modal-overlay" style={{ zIndex: 60 }}>
-            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 'min(450px, 100%)' }}>
+            <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(450px, 100%)' }}>
                 <div className="about-nostr-header">
                     <div>
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{t.relaySettings || '🌐 Relay Settings'}</h2>

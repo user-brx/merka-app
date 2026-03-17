@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Translations } from '../../i18n/translations';
 import { fetchProfile, publishProfile } from '../../services/nostr/nostr';
 import { CopyIcon, EditIcon, ExternalLinkIcon } from '../../components/ui/icons';
+import { useDragToClose } from '../../hooks/useDragToClose';
 
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; bitcoin?: string; }
 
@@ -14,6 +15,7 @@ export interface ProfilePanelProps {
 }
 
 export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePanelProps) {
+  const dragProps = useDragToClose(onClose);
   const [profile, setProfile] = useState<ProfileData>({});
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,7 +65,7 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
 
   return (
     <div className="modal-overlay" onClick={editing ? undefined : onClose}>
-      <div className="modal-box profile-modal-box" onClick={e => e.stopPropagation()}>
+      <div className="modal-box profile-modal-box" onClick={e => e.stopPropagation()} {...dragProps}>
         <div className="profile-modal-header">
           <div className="profile-avatar-placeholder">
             {keys.npub.slice(-2).toUpperCase()}

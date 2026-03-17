@@ -1,5 +1,6 @@
 import type { Translations } from '../../../i18n/translations';
 import { APP_VERSION } from '../../../config/constants';
+import { useDragToClose } from '../../../hooks/useDragToClose';
 
 interface AboutMerkaProps {
     t: Translations;
@@ -7,9 +8,10 @@ interface AboutMerkaProps {
     onOpenDonate: () => void;
 }
 export function AboutMerka({ t, onClose, onOpenDonate }: AboutMerkaProps) {
+    const dragProps = useDragToClose(onClose);
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box about-merka-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-box about-merka-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 <div className="about-nostr-header">
                     <div>
                         <h2 style={{ fontSize: '1.3rem', marginBottom: '.15rem' }}>🌍 {t.aboutMerka}</h2>

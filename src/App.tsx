@@ -28,7 +28,7 @@ import { ZapModal } from './pages/Feed/ZapModal';
 import { KeyWarningModal } from './pages/Feed/KeyWarningModal';
 import { ChatHistoryPanel, type ChatContact } from './pages/Feed/ChatHistoryPanel';
 import { Feed } from './pages/Feed/Feed';
-import { EditIcon, LogoutIcon, ChatHistoryIcon } from './components/ui/icons';
+import { ProfileIcon, LogoutIcon, ChatHistoryIcon } from './components/ui/icons';
 
 // ── Profile Panel ─────────────────────────────────────────
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; }
@@ -342,13 +342,25 @@ function App() {
   const handleLogout = () => {
     // Let hook clean up storage
     logout();
-    
+
+    // Clear all user-specific state and localStorage so the next user starts fresh
+    setChatContacts([]);
+    localStorage.removeItem('merka_contacts');
+    setUnreadPks(new Set());
+    localStorage.removeItem('merka_unread');
+    setLastReadTimestamps({});
+    localStorage.removeItem('merka_read_ts');
+    setFollowedPks(new Set());
+    localStorage.removeItem('merka_following');
+    setLikedIds(new Set());
+    localStorage.removeItem('merka_liked');
+
     // Clear all cookies
     document.cookie.split(';').forEach(c => {
       document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
     });
 
-    // Reset all in-memory state
+    // Reset UI state
     setMyProfile({});
     setLoginError('');
     setShowChatHistory(false);
@@ -630,7 +642,7 @@ function App() {
                 </button>
                 <div className="nav-sep" />
                 <button className="btn-profile-sm" onClick={() => setShowProfileModal(true)} title={t.editProfile}>
-                  <EditIcon />
+                  <ProfileIcon />
                 </button>
                 <div className="nav-sep" />
                 <div style={{ position: 'relative' }}>
