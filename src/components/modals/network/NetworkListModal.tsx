@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import type { Translations } from '../../../i18n/translations';
 import { useDragToClose } from '../../../hooks/useDragToClose';
 import { nip19 } from 'nostr-tools';
-import { fetchFollowers, fetchProfile } from '../../../services/nostr/nostr';
+import { fetchFollowers, fetchProfile, searchNostrProfiles } from '../../../services/nostr/nostr';
 import { AuthorProfile } from '../../feed/NoteCard';
+import { XIcon, UsersIcon } from '../../ui/icons';
 
 interface NetworkListModalProps {
     t: Translations;
@@ -26,6 +27,8 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
     const [searchInput, setSearchInput] = useState('');
     const [searchPk, setSearchPk] = useState<string | null>(null);
     const [searchNotFound, setSearchNotFound] = useState(false);
+    const [relaySearchPks, setRelaySearchPks] = useState<string[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     // Profiles cache — populated as rows load, used for text filtering
     const [profiles, setProfiles] = useState<Record<string, Record<string, string>>>({});
@@ -44,19 +47,39 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
 
     const displayPks = activeTab === 'followers' ? followersPks : followingPks;
 
-    // Dual-mode search: npub/hex → relay lookup | plain text → live filter
+    // Dual-mode search: npub/hex → relay lookup | plain text → local + relay search
     const raw = searchInput.trim();
     const isKeySearch = raw.startsWith('npub1') || /^[0-9a-f]{64}$/i.test(raw);
     const isTextSearch = raw.length >= 2 && !isKeySearch;
 
-    const filteredDisplayPks = isTextSearch
+    // Relay-wide profile search when text search is active
+    useEffect(() => {
+        if (!isTextSearch) { setRelaySearchPks([]); setIsSearching(false); return; }
+        setIsSearching(true);
+        const stop = searchNostrProfiles(
+            raw,
+            (pk, data) => {
+                setProfiles(prev => ({ ...prev, [pk]: data }));
+                setRelaySearchPks(prev => prev.includes(pk) ? prev : [...prev, pk]);
+            },
+            () => setIsSearching(false)
+        );
+        return () => stop();
+    }, [raw, isTextSearch]);
+
+    const localMatchPks = isTextSearch
         ? displayPks.filter(pk => {
             const p = profiles[pk];
-            if (!p) return true; // profile not yet loaded — keep visible
+            if (!p) return false; // profile not yet loaded — hide until known
             const haystack = [p.name, p.display_name, p.nip05, p.about]
                 .filter(Boolean).join(' ').toLowerCase();
             return haystack.includes(raw.toLowerCase());
         })
+        : displayPks;
+
+    // Merge local matches + relay results (deduped), keeping local results first
+    const filteredDisplayPks = isTextSearch
+        ? [...new Set([...localMatchPks, ...relaySearchPks])]
         : displayPks;
 
     const handleSearch = (e: React.FormEvent) => {
@@ -102,8 +125,11 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
         <div className="modal-overlay" style={{ zIndex: 50 }}>
             <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80dvh' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 1.2rem 0.6rem 1.2rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem' }}>👥 {t.networkTitle || 'Network'}</h3>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                        <div className="modal-header-icon icon-network"><UsersIcon size={18} /></div>
+                        <h3 style={{ margin: 0, fontSize: '1.15rem' }}>{t.networkTitle || 'Network'}</h3>
+                    </div>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}><XIcon /></button>
                 </div>
 
                 {/* Search bar */}
@@ -123,7 +149,7 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                         {(searchPk || isTextSearch) ? (
                             <button type="button" onClick={clearSearch}
                                 style={{ padding: '0 0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
-                                ✕
+                                <XIcon size={14} />
                             </button>
                         ) : (
                             <button type="submit" disabled={!searchInput.trim()}
@@ -132,6 +158,11 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                             </button>
                         )}
                     </form>
+                    {isSearching && isTextSearch && (
+                        <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.7 }}>
+                            {t.loading || 'Searching...'}
+                        </p>
+                    )}
                     {searchNotFound && (
                         <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: 'var(--danger)' }}>
                             {t.noSearchResult || 'User not found'}

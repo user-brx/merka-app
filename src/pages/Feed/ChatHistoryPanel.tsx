@@ -1,5 +1,6 @@
 import type { Translations } from '../../i18n/translations';
 import { useDragToClose } from '../../hooks/useDragToClose';
+import { XIcon, LockIcon } from '../../components/ui/icons';
 
 export interface ChatContact { pubkey: string; npub: string; label: string; }
 
@@ -17,8 +18,11 @@ export function ChatHistoryPanel({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(380px, 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.75rem' }}>
-          <h3>🔐 {t.chatHistoryTitle}</h3>
-          <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+            <div className="modal-header-icon icon-lock"><LockIcon size={18} /></div>
+            <h3 style={{ margin: 0 }}>{t.chatHistoryTitle}</h3>
+          </div>
+          <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}><XIcon /></button>
         </div>
         {contacts.length === 0 ? (
           <p style={{ textAlign: 'center', opacity: .5, padding: '1.5rem 0' }}>{t.noChatHistory}</p>
@@ -31,8 +35,10 @@ export function ChatHistoryPanel({
                   <button
                     onClick={() => { onOpenChat(c); onClose(); }}
                     style={{
-                      flex: 1, background: isUnread ? 'rgba(139,92,246,.15)' : 'rgba(139,92,246,.08)',
-                      border: isUnread ? '1px solid var(--purple)' : '1px solid rgba(139,92,246,.2)',
+                      flex: 1,
+                      background: isUnread ? 'rgba(139,92,246,.13)' : 'rgba(139,92,246,.06)',
+                      border: '1px solid ' + (isUnread ? 'rgba(139,92,246,.35)' : 'rgba(139,92,246,.15)'),
+                      borderLeft: isUnread ? '3px solid var(--purple)' : '3px solid rgba(139,92,246,.35)',
                       borderRadius: '10px', padding: '.5rem .8rem', textAlign: 'left',
                       display: 'flex', alignItems: 'center', gap: '.6rem', color: 'var(--text-main)', cursor: 'pointer',
                       position: 'relative', transition: 'all 0.2s'

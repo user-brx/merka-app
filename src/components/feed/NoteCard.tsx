@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { nip19 } from 'nostr-tools';
 import { subscribeToReactions, fetchProfile } from '../../services/nostr/nostr';
 import type { Translations } from '../../i18n/translations';
-import { ChatHistoryIcon } from '../ui/icons';
+import { ChatHistoryIcon, CopyIcon, ZapIcon, ExternalLinkIcon, HeartIcon, UserPlusIcon, UserMinusIcon, XIcon, GlobeIcon } from '../ui/icons';
 
 export interface NostrEvent {
     id: string;
@@ -16,15 +16,6 @@ export interface NostrEvent {
 // Only allow http/https links — blocks javascript: and data: URLs
 const safeUrl = (url?: string): string | null =>
     url?.match(/^https?:\/\//) ? url : null;
-
-// ── Icons ───────────────────────────────────────────────────────────────────
-const HeartIcon = ({ filled }: { filled?: boolean }) => <span>{filled ? '❤️' : '🤍'}</span>;
-const UserPlusIcon = () => <span>➕👤</span>;
-const UserMinusIcon = () => <span>➖👤</span>;
-const ExternalLinkIcon = () => <span>🔗</span>;
-const ZapIcon = () => <span>⚡</span>;
-const XIcon = () => <span>❌</span>;
-const CopyIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 
 
 // ── Author Profile mini-popup ────────────────────────────────────────────────
@@ -97,8 +88,8 @@ export function AuthorProfile({ pubkey: _pubkey, npub, t, onClose, onFollow, onU
                 )}
                 {(profile.website || profile.lud16) && (
                     <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', margin: '.5rem 0' }}>
-                        {safeUrl(profile.website) && <a href={safeUrl(profile.website)!} target="_blank" rel="noopener noreferrer" className="about-client-pill" style={{ fontSize: '.8rem' }}>🌐 {profile.website!.replace(/https?:\/\//, '')}</a>}
-                        {profile.lud16 && <span className="about-client-pill" style={{ fontSize: '.8rem' }}>⚡ {profile.lud16}</span>}
+                        {safeUrl(profile.website) && <a href={safeUrl(profile.website)!} target="_blank" rel="noopener noreferrer" className="about-client-pill" style={{ fontSize: '.8rem' }}><GlobeIcon size={12} /> {profile.website!.replace(/https?:\/\//, '')}</a>}
+                        {profile.lud16 && <span className="about-client-pill" style={{ fontSize: '.8rem' }}><ZapIcon size={12} /> {profile.lud16}</span>}
                     </div>
                 )}
                 <div style={{ display: 'flex', gap: '.6rem', marginTop: '1.2rem' }}>

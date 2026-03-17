@@ -1,5 +1,6 @@
 import type { LangCode } from '../../../i18n/translations';
 import { useDragToClose } from '../../../hooks/useDragToClose';
+import { XIcon, BitcoinIcon } from '../../ui/icons';
 
 // ── Wallet data ──────────────────────────────────────────────────────────────
 const wallets = [
@@ -65,7 +66,7 @@ const content: Partial<Record<LangCode, {
     openWallet: string; close: string;
 }>> = {
     pt: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'O dinheiro digital da internet — rápido, global e sem intermediários.',
         bitcoinTitle: '₿ O que é Bitcoin?',
         bitcoin: 'Bitcoin é uma moeda digital descentralizada criada em 2009. Não é controlada por nenhum governo, banco ou empresa. Você é o único dono do seu dinheiro — sem fronteiras, sem bloqueios, sem inflação artificial. Funciona 24h por dia, 7 dias por semana, em qualquer país do mundo.',
@@ -82,7 +83,7 @@ const content: Partial<Record<LangCode, {
         close: 'Entendi!',
     },
     en: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'Digital money for the internet — fast, global, and without middlemen.',
         bitcoinTitle: '₿ What is Bitcoin?',
         bitcoin: 'Bitcoin is a decentralized digital currency created in 2009. It is not controlled by any government, bank, or company. You are the sole owner of your money — no borders, no blocks, no artificial inflation. It works 24/7, every day, in any country in the world.',
@@ -99,7 +100,7 @@ const content: Partial<Record<LangCode, {
         close: 'Got it!',
     },
     es: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'Dinero digital para internet — rápido, global y sin intermediarios.',
         bitcoinTitle: '₿ ¿Qué es Bitcoin?',
         bitcoin: 'Bitcoin es una moneda digital descentralizada creada en 2009. No está controlada por ningún gobierno, banco o empresa. Eres el único dueño de tu dinero — sin fronteras, sin bloqueos, sin inflación artificial. Funciona 24/7, todos los días, en cualquier país del mundo.',
@@ -116,7 +117,7 @@ const content: Partial<Record<LangCode, {
         close: '¡Entendido!',
     },
     it: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'Denaro digitale per internet — veloce, globale e senza intermediari.',
         bitcoinTitle: '₿ Cos\'è Bitcoin?',
         bitcoin: 'Bitcoin è una valuta digitale decentralizzata creata nel 2009. Non è controllata da alcun governo, banca o azienda. Sei l\'unico proprietario del tuo denaro — senza confini, senza blocchi, senza inflazione artificiale. Funziona 24/7, ogni giorno, in qualsiasi paese del mondo.',
@@ -133,7 +134,7 @@ const content: Partial<Record<LangCode, {
         close: 'Capito!',
     },
     de: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'Digitales Geld für das Internet — schnell, global und ohne Mittelsmänner.',
         bitcoinTitle: '₿ Was ist Bitcoin?',
         bitcoin: 'Bitcoin ist eine dezentralisierte digitale Währung, die 2009 geschaffen wurde. Sie wird von keiner Regierung, Bank oder Firma kontrolliert. Du bist der alleinige Besitzer deines Geldes — keine Grenzen, keine Sperren, keine künstliche Inflation. Es funktioniert rund um die Uhr, jeden Tag, in jedem Land der Welt.',
@@ -150,7 +151,7 @@ const content: Partial<Record<LangCode, {
         close: 'Verstanden!',
     },
     hi: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'इंटरनेट का डिजिटल पैसा — तेज़, वैश्विक और बिना बिचौलियों के।',
         bitcoinTitle: '₿ Bitcoin क्या है?',
         bitcoin: 'Bitcoin 2009 में बनाई गई एक विकेंद्रीकृत डिजिटल मुद्रा है। इसे कोई सरकार, बैंक या कंपनी नियंत्रित नहीं करती। आप अपने पैसे के एकमात्र मालिक हैं — कोई सीमा नहीं, कोई ब्लॉक नहीं। यह दुनिया के किसी भी देश में 24/7 काम करता है।',
@@ -167,7 +168,7 @@ const content: Partial<Record<LangCode, {
         close: 'समझ गया!',
     },
     ja: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'インターネットのデジタルマネー — 高速、グローバル、仲介者なし。',
         bitcoinTitle: '₿ Bitcoinとは？',
         bitcoin: 'Bitcoinは2009年に作られた分散型デジタル通貨です。政府、銀行、企業のいずれにも管理されていません。あなただけがお金の所有者です — 国境なし、ブロックなし。世界中どこでも24時間365日使えます。',
@@ -184,7 +185,7 @@ const content: Partial<Record<LangCode, {
         close: 'わかった！',
     },
     zh: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: '互联网的数字货币 — 快速、全球化、无中间商。',
         bitcoinTitle: '₿ 什么是比特币？',
         bitcoin: '比特币是2009年创建的去中心化数字货币。它不受任何政府、银行或公司控制。您是自己资产的唯一所有者 — 无边界、无封锁、无人为通货膨胀。全天候运行，全年无休，覆盖全球任何国家。',
@@ -201,7 +202,7 @@ const content: Partial<Record<LangCode, {
         close: '明白了！',
     },
     ar: {
-        title: '₿ Bitcoin & Lightning',
+        title: 'Bitcoin & Lightning',
         tagline: 'المال الرقمي للإنترنت — سريع، عالمي، وبدون وسطاء.',
         bitcoinTitle: '₿ ما هو Bitcoin؟',
         bitcoin: 'Bitcoin عملة رقمية لامركزية أُنشئت عام 2009. لا تتحكم بها أي حكومة أو بنك أو شركة. أنت المالك الوحيد لأموالك — بلا حدود، بلا قيود، بلا تضخم مصطنع. تعمل على مدار الساعة طوال أيام الأسبوع في أي بلد في العالم.',
@@ -268,15 +269,18 @@ export function WalletGuide({ lang, onClose }: WalletGuideProps) {
             >
                 {/* Header */}
                 <div className="about-nostr-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--warning)' }}>
-                            {c.title}
-                        </h2>
-                        <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: '.2rem' }}>
-                            {c.tagline}
-                        </p>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.85rem', flex: 1, minWidth: 0 }}>
+                        <div className="modal-header-icon icon-btc"><BitcoinIcon size={20} /></div>
+                        <div>
+                            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--warning)' }}>
+                                {c.title}
+                            </h2>
+                            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: '.2rem' }}>
+                                {c.tagline}
+                            </p>
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
 
                 {/* Scrollable body */}

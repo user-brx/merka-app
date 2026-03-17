@@ -1467,6 +1467,60 @@ textarea {
   flex-shrink: 0;
 }
 
+/* ── Modal header icon badge ── */
+.modal-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.modal-header-icon.icon-donate {
+  background: rgba(251, 146, 60, .12);
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, .25);
+}
+
+.modal-header-icon.icon-globe {
+  background: rgba(96, 165, 250, .10);
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, .22);
+}
+
+.modal-header-icon.icon-info {
+  background: rgba(139, 92, 246, .12);
+  color: var(--purple);
+  border-color: rgba(139, 92, 246, .25);
+}
+
+.modal-header-icon.icon-btc {
+  background: rgba(245, 158, 11, .10);
+  color: var(--warning);
+  border-color: rgba(245, 158, 11, .22);
+}
+
+.modal-header-icon.icon-network {
+  background: rgba(14, 165, 233, .10);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, .22);
+}
+
+.modal-header-icon.icon-relay {
+  background: rgba(16, 185, 129, .10);
+  color: var(--success);
+  border-color: rgba(16, 185, 129, .22);
+}
+
+.modal-header-icon.icon-lock {
+  background: rgba(139, 92, 246, .10);
+  color: var(--purple);
+  border-color: rgba(139, 92, 246, .22);
+}
+
 .about-nostr-body {
   flex: 1;
   overflow-y: auto;
@@ -2148,57 +2202,14 @@ textarea {
     white-space: nowrap;
   }
 
-  /* Linha 1: primary row ocupa espaço restante à direita do brand */
+  /* Primary row — todos os botões numa faixa, com wrap se necessário */
   .nav-primary-row {
     flex: 1;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: flex-end;
     align-items: center;
     gap: 0.2rem;
     overflow: visible;
-  }
-
-  /* Toggle visível no mobile */
-  .nav-icons-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background: rgba(255, 255, 255, .04);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-muted);
-    font-size: 0.6rem;
-    padding: 0.15rem 0.55rem;
-    min-height: 28px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-
-  .nav-icons-toggle:hover {
-    background: rgba(255, 255, 255, .08);
-  }
-
-  /* Linha 2 — expandível: chat, seguidores, perfil, sair */
-  .nav-secondary-row {
-    width: 100%;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.2rem;
-    max-height: 50px;
-    overflow: visible;
-    transition: max-height 0.25s ease-out, opacity 0.2s ease, padding 0.2s ease;
-    opacity: 1;
-    padding-top: 0.2rem;
-  }
-
-  .nav-secondary-row.icons-hidden {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    padding-top: 0;
-    pointer-events: none;
   }
 
   /* Separadores ocultos no mobile */
@@ -2269,7 +2280,6 @@ textarea {
   .load-more-btn,
   .search-nostr-btn,
   .search-clear-btn,
-  .nav-icons-toggle,
   .panel-toggle-btn,
   .tag-select,
   .btn-small,

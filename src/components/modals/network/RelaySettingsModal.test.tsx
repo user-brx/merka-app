@@ -90,9 +90,9 @@ describe('RelaySettingsModal — lifecycle', () => {
 
 // ── Fechar modal ──────────────────────────────────────────────────────────────
 describe('RelaySettingsModal — fechar', () => {
-    it('deve chamar onClose ao clicar no botão ✕', () => {
+    it('deve chamar onClose ao clicar no botão fechar', () => {
         const { onClose } = setup();
-        fireEvent.click(screen.getByText('✕'));
+        fireEvent.click(screen.getByRole('button', { name: /close/i }));
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 

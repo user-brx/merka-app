@@ -225,3 +225,36 @@ export function searchNostrNotes(options: {
   setTimeout(finish, 8000);
   return () => finish();
 }
+
+export function searchNostrProfiles(
+  query: string,
+  onProfile: (pk: string, data: Record<string, string>) => void,
+  onDone: () => void
+): () => void {
+  if (!query.trim() || query.trim().length < 2) { onDone(); return () => {}; }
+
+  let closed = false;
+  const finish = () => {
+    if (closed) return;
+    closed = true;
+    onDone();
+    try { sub.close(); } catch { /* ignore */ }
+  };
+
+  const sub = pool.subscribeMany(
+    SEARCH_RELAYS,
+    { kinds: [0], search: query.trim(), limit: 20 },
+    {
+      onevent: (event) => {
+        try {
+          const data = JSON.parse(event.content) as Record<string, string>;
+          onProfile(event.pubkey, data);
+        } catch { /* ignore invalid JSON */ }
+      },
+      oneose: finish,
+    }
+  );
+
+  setTimeout(finish, 6000);
+  return () => finish();
+}

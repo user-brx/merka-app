@@ -1,6 +1,7 @@
 import type { Translations } from '../../../i18n/translations';
 import { APP_VERSION } from '../../../config/constants';
 import { useDragToClose } from '../../../hooks/useDragToClose';
+import { XIcon, GlobeIcon } from '../../ui/icons';
 
 interface AboutMerkaProps {
     t: Translations;
@@ -13,14 +14,17 @@ export function AboutMerka({ t, onClose, onOpenDonate }: AboutMerkaProps) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-box about-merka-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 <div className="about-nostr-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.3rem', marginBottom: '.15rem' }}>🌍 {t.aboutMerka}</h2>
-                        <p style={{ fontSize: '.82rem', color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                            {t.merkaTagline}
-                            <span className="app-version-badge">v{APP_VERSION}</span>
-                        </p>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.85rem', flex: 1, minWidth: 0 }}>
+                        <div className="modal-header-icon icon-globe"><GlobeIcon size={20} /></div>
+                        <div>
+                            <h2 style={{ fontSize: '1.3rem', marginBottom: '.15rem' }}>{t.aboutMerka}</h2>
+                            <p style={{ fontSize: '.82rem', color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                                {t.merkaTagline}
+                                <span className="app-version-badge">v{APP_VERSION}</span>
+                            </p>
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
 
                 <div className="about-nostr-body">

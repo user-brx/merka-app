@@ -2,6 +2,7 @@ import { useState } from 'react';
 import QRCode from 'react-qr-code';
 import type { LangCode } from '../../../i18n/translations';
 import { useDragToClose } from '../../../hooks/useDragToClose';
+import { XIcon, CopyIcon, DonateIcon } from '../../ui/icons';
 
 interface DonateProps {
     lang: LangCode;
@@ -22,7 +23,7 @@ const content: Record<LangCode | 'ar', {
     copy: string; copied: string; thanks: string; open: string; close: string;
 }> = {
     pt: {
-        title: '❤️ Apoiar o Merka', desc: 'O Merka é um projeto livre e de código aberto. Se ele te ajuda, considere fazer uma doação para continuar o desenvolvimento.',
+        title: 'Apoiar o Merka', desc: 'O Merka é um projeto livre e de código aberto. Se ele te ajuda, considere fazer uma doação para continuar o desenvolvimento.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Envie sats instantaneamente via Lightning Network. Copie o endereço abaixo e use qualquer carteira Lightning.',
         btcDesc: 'Doação on-chain Bitcoin. Para quantias maiores ou sem carteira Lightning.',
@@ -30,7 +31,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'Copiar', copied: 'Copiado!', thanks: 'Obrigado pelo apoio! 🙏', open: 'Abrir Alby', close: 'Fechar',
     },
     en: {
-        title: '❤️ Support Merka', desc: 'Merka is a free and open-source project. If it helps you, consider donating to keep development going.',
+        title: 'Support Merka', desc: 'Merka is a free and open-source project. If it helps you, consider donating to keep development going.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Send sats instantly via Lightning Network. Copy the address below and use any Lightning wallet.',
         btcDesc: 'On-chain Bitcoin donation. For larger amounts or without a Lightning wallet.',
@@ -38,7 +39,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'Copy', copied: 'Copied!', thanks: 'Thank you for your support! 🙏', open: 'Open Alby', close: 'Close',
     },
     es: {
-        title: '❤️ Apoyar Merka', desc: 'Merka es un proyecto libre y de código abierto. Si te ayuda, considera hacer una donación.',
+        title: 'Apoyar Merka', desc: 'Merka es un proyecto libre y de código abierto. Si te ayuda, considera hacer una donación.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Envía sats al instante via Lightning Network.',
         btcDesc: 'Donación on-chain Bitcoin para montos mayores.',
@@ -71,7 +72,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'Copy', copied: 'Copied!', thanks: 'Thank you for your support! ⚡', open: 'Default Wallet', close: 'Close'
     },
     hi: {
-        title: '❤️ Merka को समर्थन करें', desc: 'Merka एक मुफ्त ओपन-सोर्स प्रोजेक्ट है। यदि यह आपकी मदद करता है, तो दान करें।',
+        title: 'Merka को समर्थन करें', desc: 'Merka एक मुफ्त ओपन-सोर्स प्रोजेक्ट है। यदि यह आपकी मदद करता है, तो दान करें।',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Lightning Network के माध्यम से तत्काल sats भेजें।',
         btcDesc: 'बड़ी राशि के लिए Bitcoin on-chain दान।',
@@ -79,7 +80,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'कॉपी', copied: 'कॉपी किया!', thanks: 'आपके समर्थन के लिए धन्यवाद! 🙏', open: 'Alby खोलें', close: 'बंद करें',
     },
     ja: {
-        title: '❤️ Merkaを支援する', desc: 'Merkaは無料のオープンソースプロジェクトです。役に立った場合、開発を続けるために寄付をご検討ください。',
+        title: 'Merkaを支援する', desc: 'Merkaは無料のオープンソースプロジェクトです。役に立った場合、開発を続けるために寄付をご検討ください。',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Lightning Networkで即座にsatsを送金。',
         btcDesc: 'Bitcoin on-chainでの寄付。大きな金額向け。',
@@ -87,7 +88,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'コピー', copied: 'コピー済み!', thanks: 'ご支援ありがとうございます！🙏', open: 'Albyを開く', close: '閉じる',
     },
     zh: {
-        title: '❤️ 支持 Merka', desc: 'Merka 是一个免费开源项目。如果对您有帮助，请考虑捐款支持开发。',
+        title: '支持 Merka', desc: 'Merka 是一个免费开源项目。如果对您有帮助，请考虑捐款支持开发。',
         lightningTab: '⚡ Lightning', btcTab: '₿ 比特币', nostrTab: '🌐 Nostr Zap',
         lightningDesc: '通过 Lightning Network 即时发送 sats。',
         btcDesc: '比特币链上捐款，适合较大金额。',
@@ -95,7 +96,7 @@ const content: Record<LangCode | 'ar', {
         copy: '复制', copied: '已复制！', thanks: '感谢您的支持！🙏', open: '打开 Alby', close: '关闭',
     },
     ar: {
-        title: '❤️ دعم Merka', desc: 'Merka مشروع مفتوح المصدر ومجاني. إذا أفادك، فكّر في التبرع لمواصلة التطوير.',
+        title: 'دعم Merka', desc: 'Merka مشروع مفتوح المصدر ومجاني. إذا أفادك، فكّر في التبرع لمواصلة التطوير.',
         lightningTab: '⚡ Lightning', btcTab: '₿ بيتكوين', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'أرسل ساتوشي فوراً عبر شبكة Lightning.',
         btcDesc: 'تبرع بالبيتكوين على السلسلة (on-chain) للمبالغ الكبيرة.',
@@ -103,7 +104,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'نسخ', copied: 'تم النسخ!', thanks: 'شكراً لدعمك! 🙏', open: 'فتح Alby', close: 'إغلاق',
     },
     it: {
-        title: '❤️ Supporta Merka', desc: 'Merka è un progetto open-source e gratuito. Se ti è utile, considera di donare per continuare lo sviluppo.',
+        title: 'Supporta Merka', desc: 'Merka è un progetto open-source e gratuito. Se ti è utile, considera di donare per continuare lo sviluppo.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Invia sats istantaneamente tramite Lightning Network. Copia l\'indirizzo qui sotto e usa qualsiasi wallet Lightning.',
         btcDesc: 'Donazione on-chain Bitcoin. Per importi maggiori o senza un wallet Lightning.',
@@ -111,7 +112,7 @@ const content: Record<LangCode | 'ar', {
         copy: 'Copia', copied: 'Copiato!', thanks: 'Grazie per il tuo supporto! 🙏', open: 'Apri Alby', close: 'Chiudi',
     },
     de: {
-        title: '❤️ Merka unterstützen', desc: 'Merka ist ein freies Open-Source-Projekt. Wenn es Ihnen hilft, erwägen Sie eine Spende.',
+        title: 'Merka unterstützen', desc: 'Merka ist ein freies Open-Source-Projekt. Wenn es Ihnen hilft, erwägen Sie eine Spende.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Senden Sie sats sofort über das Lightning Network.',
         btcDesc: 'Bitcoin On-Chain-Spende. Für größere Beträge.',
@@ -119,17 +120,17 @@ const content: Record<LangCode | 'ar', {
         copy: 'Kopieren', copied: 'Kopiert!', thanks: 'Danke für Ihre Unterstützung! 🙏', open: 'Alby öffnen', close: 'Schließen',
     },
     fa: {
-        title: '❤️ حمایت از Merka', desc: 'پروژه منبع باز و رایگان.',
+        title: 'حمایت از Merka', desc: 'پروژه منبع باز و رایگان.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'ارسال فوری sats.', btcDesc: 'بیت‌کوین', nostrDesc: 'نوستر', copy: 'کپی', copied: 'کپی شد!', thanks: 'ممنون!', open: 'باز کردن', close: 'بستن',
     },
     vi: {
-        title: '❤️ Ủng hộ Merka', desc: 'Dự án mã nguồn mở miễn phí.',
+        title: 'Ủng hộ Merka', desc: 'Dự án mã nguồn mở miễn phí.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Gửi sats ngay lập tức.', btcDesc: 'Bitcoin', nostrDesc: 'Nostr', copy: 'Sao chép', copied: 'Đã sao chép!', thanks: 'Cảm ơn!', open: 'Mở', close: 'Đóng',
     },
     uk: {
-        title: '❤️ Підтримати Merka', desc: 'Відкритий проект.',
+        title: 'Підтримати Merka', desc: 'Відкритий проект.',
         lightningTab: '⚡ Lightning', btcTab: '₿ Bitcoin', nostrTab: '🌐 Nostr Zap',
         lightningDesc: 'Відправити sats.', btcDesc: 'Bitcoin', nostrDesc: 'Nostr', copy: 'Копіювати', copied: 'Скопійовано!', thanks: 'Дякуємо!', open: 'Відкрити', close: 'Закрити',
     },
@@ -163,11 +164,14 @@ export function DonateModal({ lang, onClose }: DonateProps) {
             <div className="modal-box donate-modal-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 {/* Header — fixo, não rola */}
                 <div className="donate-header" style={{ flexShrink: 0 }}>
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem' }}>{c.title}</h2>
-                        <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: '.2rem' }}>{c.desc}</p>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.85rem', flex: 1, minWidth: 0 }}>
+                        <div className="modal-header-icon icon-donate"><DonateIcon size={20} /></div>
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem' }}>{c.title}</h2>
+                            <p style={{ fontSize: '.82rem', color: 'var(--text-muted)', marginTop: '.2rem' }}>{c.desc}</p>
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
 
                 {/* Conteúdo rolável */}
@@ -200,7 +204,7 @@ export function DonateModal({ lang, onClose }: DonateProps) {
                           <button className="btn-icon" onClick={() => copy(tabValue, tab)} style={{ flexShrink: 0 }}>
                               {copied === tab
                                   ? <span style={{ fontSize: '.65rem', color: 'var(--success)' }}>{c.copied}</span>
-                                  : <span>📋</span>
+                                  : <CopyIcon />
                               }
                           </button>
                       </div>

@@ -11,7 +11,7 @@ import {
   fetchNotesBatch
 } from '../../services/nostr/nostr';
 import { APP_GUID, MERKA_PUBKEY } from '../../config/constants';
-import { CopyIcon } from '../../components/ui/icons';
+import { CopyIcon, SearchIcon } from '../../components/ui/icons';
 
 export interface FeedProps {
   t: Translations;
@@ -395,7 +395,7 @@ export function Feed({
 
         <div className="search-bar-row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '.5rem' }}>
           <div className="search-input-wrap" style={{ flex: 1, minWidth: '150px' }}>
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><SearchIcon size={14} /></span>
             <input
               className="search-input"
               placeholder={t.searchPlaceholder}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Translations } from '../../i18n/translations';
-import { CopyIcon } from '../../components/ui/icons';
+import { CopyIcon, LockIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
 export function KeyWarningModal({ t, nsec, onClose }: { t: Translations; nsec: string; onClose: () => void }) {
@@ -10,7 +10,7 @@ export function KeyWarningModal({ t, nsec, onClose }: { t: Translations; nsec: s
   return (
     <div className="modal-overlay">
       <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ borderColor: 'rgba(239,68,68,.35)', maxWidth: 'min(440px, 100%)' }}>
-        <h3 style={{ color: 'var(--danger)' }}>🔐 {t.saveYourKey}</h3>
+        <h3 style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '.4rem' }}><LockIcon size={18} /> {t.saveYourKey}</h3>
         <p style={{ fontSize: '.9rem', lineHeight: 1.6 }}>{t.saveKeyDesc}</p>
         <div className="nsec-section" style={{ margin: '.75rem 0' }}>
           <div className="profile-field-label" style={{ color: 'var(--danger)' }}>{t.secKey}:</div>

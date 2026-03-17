@@ -5,7 +5,7 @@ import type { UnsignedEvent } from 'nostr-tools';
 type Rumor = UnsignedEvent & { id: string };
 import { publishEncryptedDM, subscribeToConversation, fetchProfile } from '../../services/nostr/nostr';
 import type { Translations } from '../../i18n/translations';
-import { ZapIcon } from '../ui/icons';
+import { ZapIcon, XIcon, LockIcon } from '../ui/icons';
 
 interface ChatMessage {
     id: string;
@@ -114,7 +114,7 @@ export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpe
                         style={{ color: 'var(--purple)', fontSize: '1.05rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: onOpenProfile ? 'pointer' : 'default' }}
                         onClick={() => onOpenProfile?.(targetPubkey, targetNpub)}
                     >
-                        🔐 {targetLabel || targetNpub.slice(0, 12) + '...'}
+                        <LockIcon size={14} /> {targetLabel || targetNpub.slice(0, 12) + '...'}
                     </h3>
                     <div style={{ fontSize: '.65rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '.1rem' }}>
                         {targetNpub.slice(0, 20)}...
@@ -126,7 +126,7 @@ export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpe
                             <ZapIcon />
                         </button>
                     )}
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '0.3rem 0.6rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '0.3rem 0.6rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
             </div>
 

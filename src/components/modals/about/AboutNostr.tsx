@@ -1,5 +1,6 @@
 import type { LangCode } from '../../../i18n/translations';
 import { useDragToClose } from '../../../hooks/useDragToClose';
+import { XIcon, InfoIcon } from '../../ui/icons';
 
 const content: Record<LangCode, {
     title: string; tagline: string;
@@ -11,7 +12,7 @@ const content: Record<LangCode, {
     close: string;
 }> = {
     pt: {
-        title: '🔮 O que é o Nostr?',
+        title: 'O que é o Nostr?',
         tagline: 'O protocolo de comunicação aberto que alimenta o Merka.',
         whatTitle: 'O que é o Nostr?',
         what: 'Nostr é um protocolo de comunicação descentralizado — como o e-mail, mas para redes sociais e mercados. Qualquer pessoa pode participar sem precisar de uma empresa ou servidor central. Não existe um "dono" do Nostr: é um padrão aberto que qualquer software pode usar.',
@@ -27,7 +28,7 @@ const content: Record<LangCode, {
         close: 'Entendi!',
     },
     en: {
-        title: '🔮 What is Nostr?',
+        title: 'What is Nostr?',
         tagline: 'The open communication protocol powering Merka.',
         whatTitle: 'What is Nostr?',
         what: 'Nostr is a decentralized communication protocol — like email, but for social networks and marketplaces. Anyone can participate without a central company or server. There is no "owner" of Nostr: it is an open standard that any software can use.',
@@ -43,7 +44,7 @@ const content: Record<LangCode, {
         close: 'Got it!',
     },
     es: {
-        title: '🔮 ¿Qué es Nostr?',
+        title: '¿Qué es Nostr?',
         tagline: 'El protocolo de comunicación abierta que impulsa Merka.',
         whatTitle: '¿Qué es Nostr?',
         what: 'Nostr es un protocolo de comunicación descentralizado — como el email, pero para redes sociales y mercados. Cualquiera puede participar sin necesitar una empresa o servidor central. No hay un "dueño" de Nostr: es un estándar abierto que cualquier software puede usar.',
@@ -59,7 +60,7 @@ const content: Record<LangCode, {
         close: '¡Entendido!',
     },
     hi: {
-        title: '🔮 Nostr क्या है?',
+        title: 'Nostr क्या है?',
         tagline: 'Merka को चलाने वाला खुला संचार प्रोटोकॉल।',
         whatTitle: 'Nostr क्या है?',
         what: 'Nostr एक विकेंद्रीकृत संचार प्रोटोकॉल है — ईमेल जैसा, लेकिन सोशल नेटवर्क और बाज़ारों के लिए। कोई भी बिना किसी केंद्रीय कंपनी या सर्वर के भाग ले सकता है। Nostr का कोई "मालिक" नहीं है — यह एक खुला मानक है।',
@@ -75,7 +76,7 @@ const content: Record<LangCode, {
         close: 'समझ गया!',
     },
     ja: {
-        title: '🔮 Nostrとは？',
+        title: 'Nostrとは？',
         tagline: 'Merkaを支えるオープンな通信プロトコル。',
         whatTitle: 'Nostrとは？',
         what: 'Nostrは分散型の通信プロトコルです — メールに似ていますが、SNSやマーケットプレイス向けです。中央のサーバーや企業なしに誰でも参加できます。Nostrには「オーナー」がいません。誰でも使えるオープンな規格です。',
@@ -91,7 +92,7 @@ const content: Record<LangCode, {
         close: '了解！',
     },
     zh: {
-        title: '🔮 什么是 Nostr？',
+        title: '什么是 Nostr？',
         tagline: '驱动 Merka 的开放通信协议。',
         whatTitle: '什么是 Nostr？',
         what: 'Nostr 是一种去中心化通信协议——类似于电子邮件，但专为社交网络和市场设计。任何人无需中央公司或服务器即可参与。Nostr 没有"所有者"：这是任何软件都可以使用的开放标准。',
@@ -107,7 +108,7 @@ const content: Record<LangCode, {
         close: '明白了！',
     },
     it: {
-        title: '🔮 Cos\'è Nostr?',
+        title: 'Cos\'è Nostr?',
         tagline: 'Il protocollo di comunicazione aperto che alimenta Merka.',
         whatTitle: 'Cos\'è Nostr?',
         what: 'Nostr è un protocollo di comunicazione decentralizzato — come l\'e-mail, ma per social network e mercati. Chiunque può partecipare senza un\'azienda o server centrale. Non c\'è un "proprietario" di Nostr: è uno standard aperto che qualsiasi software può usare.',
@@ -124,7 +125,7 @@ const content: Record<LangCode, {
     },
 
     ru: {
-        title: '🔮 What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
+        title: 'What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
         whatTitle: 'What it is:', what: 'Nostr allows anyone to build censorship-resistant applications. Your data is cryptographically tied to you and not reliant on any central platform.',
         noServerTitle: 'No central server:', noServer: 'Instead of talking to one server like Twitter, clients publish messages to multiple independent "relays".',
         keysTitle: 'Your Keys, Your Identity:',
@@ -136,7 +137,7 @@ const content: Record<LangCode, {
         close: 'Close'
     },
     fr: {
-        title: '🔮 What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
+        title: 'What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
         whatTitle: 'What it is:', what: 'Nostr allows anyone to build censorship-resistant applications. Your data is cryptographically tied to you and not reliant on any central platform.',
         noServerTitle: 'No central server:', noServer: 'Instead of talking to one server like Twitter, clients publish messages to multiple independent "relays".',
         keysTitle: 'Your Keys, Your Identity:',
@@ -148,7 +149,7 @@ const content: Record<LangCode, {
         close: 'Close'
     },
     tr: {
-        title: '🔮 What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
+        title: 'What is Nostr?', tagline: 'A simple protocol for decentralized social networking and messaging.',
         whatTitle: 'What it is:', what: 'Nostr allows anyone to build censorship-resistant applications. Your data is cryptographically tied to you and not reliant on any central platform.',
         noServerTitle: 'No central server:', noServer: 'Instead of talking to one server like Twitter, clients publish messages to multiple independent "relays".',
         keysTitle: 'Your Keys, Your Identity:',
@@ -160,7 +161,7 @@ const content: Record<LangCode, {
         close: 'Close'
     },
     de: {
-        title: '🔮 Was ist Nostr?',
+        title: 'Was ist Nostr?',
         tagline: 'Das offene Kommunikationsprotokoll hinter Merka.',
         whatTitle: 'Was ist Nostr?',
         what: 'Nostr ist ein dezentrales Kommunikationsprotokoll — wie E-Mail, aber für soziale Netzwerke und Marktplätze. Jeder kann teilnehmen, ohne ein zentrales Unternehmen oder Server. Es gibt keinen "Eigentümer" von Nostr: Es ist ein offener Standard.',
@@ -176,7 +177,7 @@ const content: Record<LangCode, {
         close: 'Verstanden!',
     },
     ar: {
-        title: '🔮 ما هو Nostr؟',
+        title: 'ما هو Nostr؟',
         tagline: 'بروتوكول الاتصال المفتوح الذي يشغل Merka.',
         whatTitle: 'ما هو Nostr؟',
         what: 'Nostr هو بروتوكول اتصال لامركزي - مثل البريد الإلكتروني، ولكن للشبكات الاجتماعية والأسواق. يمكن لأي شخص المشاركة بدون شركة مركزية أو خادم.',
@@ -191,9 +192,9 @@ const content: Record<LangCode, {
         merka: 'يستخدم Merka بروتوكول Nostr لنشر إعلانات البيع والشراء والردود والرسائل الخاصة — كل ذلك مباشرة على الشبكة، بدون وسطاء.',
         close: 'فهمت!',
     },
-    fa: { title: '🔮 What is Nostr?', tagline: 'The open protocol powering Merka.', whatTitle: 'What is Nostr?', what: 'Decentralized communication.', noServerTitle: 'No Servers', noServer: 'Your data belongs to you.', keysTitle: 'Your Keys', keysPublic: 'Public (npub)', keysPrivate: 'Private (nsec)', keysWarning: 'Never share it.', clientsTitle: 'Clients', merkaTitle: 'Merka on Nostr', merka: 'Merka uses Nostr.', close: 'Close' },
-    vi: { title: '🔮 What is Nostr?', tagline: 'The open protocol powering Merka.', whatTitle: 'What is Nostr?', what: 'Decentralized communication.', noServerTitle: 'No Servers', noServer: 'Your data belongs to you.', keysTitle: 'Your Keys', keysPublic: 'Public (npub)', keysPrivate: 'Private (nsec)', keysWarning: 'Never share it.', clientsTitle: 'Clients', merkaTitle: 'Merka on Nostr', merka: 'Merka uses Nostr.', close: 'Close' },
-    uk: { title: '🔮 Що таке Nostr?', tagline: 'Відкритий протокол.', whatTitle: 'Що це?', what: 'Децентралізована мережа.', noServerTitle: 'Без серверів', noServer: 'Ваші дані ваші.', keysTitle: 'Ваші ключі', keysPublic: 'Публічний', keysPrivate: 'Приватний', keysWarning: 'Нікому не давайте.', clientsTitle: 'Клієнти', merkaTitle: 'Merka на Nostr', merka: 'Спосіб доступу.', close: 'Зрозуміло' },
+    fa: { title: 'What is Nostr?', tagline: 'The open protocol powering Merka.', whatTitle: 'What is Nostr?', what: 'Decentralized communication.', noServerTitle: 'No Servers', noServer: 'Your data belongs to you.', keysTitle: 'Your Keys', keysPublic: 'Public (npub)', keysPrivate: 'Private (nsec)', keysWarning: 'Never share it.', clientsTitle: 'Clients', merkaTitle: 'Merka on Nostr', merka: 'Merka uses Nostr.', close: 'Close' },
+    vi: { title: 'What is Nostr?', tagline: 'The open protocol powering Merka.', whatTitle: 'What is Nostr?', what: 'Decentralized communication.', noServerTitle: 'No Servers', noServer: 'Your data belongs to you.', keysTitle: 'Your Keys', keysPublic: 'Public (npub)', keysPrivate: 'Private (nsec)', keysWarning: 'Never share it.', clientsTitle: 'Clients', merkaTitle: 'Merka on Nostr', merka: 'Merka uses Nostr.', close: 'Close' },
+    uk: { title: 'Що таке Nostr?', tagline: 'Відкритий протокол.', whatTitle: 'Що це?', what: 'Децентралізована мережа.', noServerTitle: 'Без серверів', noServer: 'Ваші дані ваші.', keysTitle: 'Ваші ключі', keysPublic: 'Публічний', keysPrivate: 'Приватний', keysWarning: 'Нікому не давайте.', clientsTitle: 'Клієнти', merkaTitle: 'Merka на Nostr', merka: 'Спосіб доступу.', close: 'Зрозуміло' },
 };
 
 const clients = [
@@ -213,11 +214,14 @@ export function AboutNostr({ lang, onClose }: AboutNostrProps) {
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} {...dragProps}>
                 <div className="about-nostr-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{c.title}</h2>
-                        <p style={{ fontSize: '.85rem', color: 'var(--accent)', margin: 0 }}>{c.tagline}</p>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.85rem', flex: 1, minWidth: 0 }}>
+                        <div className="modal-header-icon icon-info"><InfoIcon size={20} /></div>
+                        <div>
+                            <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{c.title}</h2>
+                            <p style={{ fontSize: '.85rem', color: 'var(--accent)', margin: 0 }}>{c.tagline}</p>
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
 
                 <div className="about-nostr-body">

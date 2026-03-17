@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Translations } from '../../../i18n/translations';
 import { RELAY_CONFIGS, DEFAULT_RELAYS, updateRelays, subscribeRelayStatus, type RelayState, publishNip65Relays } from '../../../services/nostr/nostr';
 import { useDragToClose } from '../../../hooks/useDragToClose';
+import { XIcon, ServerIcon } from '../../ui/icons';
 
 interface RelaySettingsModalProps {
     t: Translations;
@@ -69,13 +70,16 @@ export function RelaySettingsModal({ t, keys, onClose }: RelaySettingsModalProps
         <div className="modal-overlay" style={{ zIndex: 60 }}>
             <div className="modal-box about-nostr-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(450px, 100%)' }}>
                 <div className="about-nostr-header">
-                    <div>
-                        <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{t.relaySettings || '🌐 Relay Settings'}</h2>
-                        <p style={{ fontSize: '.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                            {t.relaySettingsDesc || 'Merka connects directly to the Nostr network. Add or remove relays to stay connected and bypass censorship.'}
-                        </p>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.85rem', flex: 1, minWidth: 0 }}>
+                        <div className="modal-header-icon icon-relay"><ServerIcon size={20} /></div>
+                        <div>
+                            <h2 style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{t.relaySettings || 'Relay Settings'}</h2>
+                            <p style={{ fontSize: '.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                                {t.relaySettingsDesc || 'Merka connects directly to the Nostr network. Add or remove relays to stay connected and bypass censorship.'}
+                            </p>
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem', flexShrink: 0 }}>✕</button>
+                    <button className="btn-icon" onClick={onClose} aria-label="Close" style={{ padding: '.4rem .7rem', flexShrink: 0 }}><XIcon /></button>
                 </div>
 
                 <div className="about-nostr-body" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

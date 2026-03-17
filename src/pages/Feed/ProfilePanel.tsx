@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Translations } from '../../i18n/translations';
 import { fetchProfile, publishProfile } from '../../services/nostr/nostr';
-import { CopyIcon, EditIcon, ExternalLinkIcon } from '../../components/ui/icons';
+import { CopyIcon, EditIcon, ExternalLinkIcon, HelpCircleIcon, XIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; bitcoin?: string; }
@@ -31,7 +31,7 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
       <div className="profile-field-label">
         {label}
         {help && (
-          <span className="field-help-icon" title={help}>?</span>
+          <span className="field-help-icon" title={help}><HelpCircleIcon /></span>
         )}
       </div>
       {editing ? (
@@ -90,7 +90,7 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
             </div>
           </div>
           {!editing && (
-            <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}>✕</button>
+            <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}><XIcon /></button>
           )}
         </div>
 
