@@ -28,7 +28,7 @@ import { ZapModal } from './pages/Feed/ZapModal';
 import { KeyWarningModal } from './pages/Feed/KeyWarningModal';
 import { ChatHistoryPanel, type ChatContact } from './pages/Feed/ChatHistoryPanel';
 import { Feed } from './pages/Feed/Feed';
-import { ProfileIcon, LogoutIcon, ChatHistoryIcon, GlobeIcon, InfoIcon, BitcoinIcon, DonateIcon, UsersIcon, ChevronDownIcon, XIcon, ZapIcon } from './components/ui/icons';
+import { ProfileIcon, ChatHistoryIcon, GlobeIcon, InfoIcon, BitcoinIcon, DonateIcon, UsersIcon, ChevronDownIcon, XIcon, ZapIcon } from './components/ui/icons';
 
 // ── Profile Panel ─────────────────────────────────────────
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; }
@@ -90,7 +90,6 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
 
   const { relayStates, connectedRelays } = useRelays();
   const [showRelaySettings, setShowRelaySettings] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [loginError, setLoginError] = useState('');
 
@@ -450,6 +449,7 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
           onClose={() => setShowProfileModal(false)}
           onUpdate={(p) => setMyProfile(p)}
           onToast={showGlobalToast}
+          onLogout={() => { setShowProfileModal(false); handleLogout(); }}
         />
       )}
       {zapTarget && (
@@ -523,10 +523,9 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
         <div className="nav-top-line">
           <div className="brand" onClick={() => setShowAboutMerka(true)} style={{ cursor: 'pointer' }} title={t.aboutMerka}>
             <div className="brand-icon"><GlobeIcon size={20} /></div>
-            <span className="brand-name">Merka</span>
           </div>
 
-          {/* ── Linha 1: sempre visível — nostr, btc, apoiar, relays, idioma ── */}
+          {/* ── Linha 1: globo, ajuda, btc, apoiar, idioma, chat, rede, perfil ── */}
           <div className="nav-controls nav-primary-row">
             <button className="btn-icon nav-info-btn" onClick={() => setShowAboutNostr(true)} title={t.whatIsNostr}>
               <InfoIcon size={18} />
@@ -537,6 +536,37 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
             <button className="btn-icon nav-info-btn" onClick={() => setShowDonate(true)} title={t.donate}>
               <DonateIcon size={18} />
             </button>
+
+            {/* Idioma */}
+            <div ref={langDropdownRef} style={{ position: 'relative' }}>
+              <button
+                className="lang-select-inline"
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'space-between', padding: '0.13rem 0.3rem', border: '1px solid var(--border-color)', borderRadius: '5px', background: 'var(--btn-base)', color: 'var(--text-main)', fontSize: '0.58rem', minWidth: '42px' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  {lang.toUpperCase()}
+                </span>
+                <ChevronDownIcon size={8} />
+              </button>
+              {isLangOpen && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: '#070d1a', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1000, display: 'flex', flexDirection: 'column', minWidth: '40px', padding: '3px', boxShadow: '0 12px 28px rgba(0,0,0,0.9)', maxHeight: '400px', overflowY: 'auto' }}>
+                  {(Object.keys(langToCountry) as LangCode[]).map((l) => (
+                    <button
+                      key={l}
+                      className="lang-dropdown-item"
+                      onClick={() => { setLang(l as LangCode); setIsLangOpen(false); }}
+                      style={{ background: lang === l ? 'rgba(59, 130, 246, 0.18)' : 'transparent', border: 'none', color: lang === l ? 'var(--primary)' : 'var(--text-main)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', display: 'flex', gap: '5px', alignItems: 'center', fontSize: '0.62rem', transition: 'all 0.15s', flexShrink: 0 }}
+                      onMouseOver={(e) => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+                      onMouseOut={(e) => { if (lang !== l) e.currentTarget.style.background = 'transparent' }}
+                      title={langNativeNames[l]}
+                    >
+                      {l.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Relay status */}
             <div ref={relayPanelRef} style={{ position: 'relative' }}>
@@ -579,37 +609,6 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
               )}
             </div>
 
-            {/* Idioma */}
-            <div ref={langDropdownRef} style={{ position: 'relative' }}>
-              <button
-                className="lang-select-inline"
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                style={{ display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'space-between', padding: '0.13rem 0.3rem', border: '1px solid var(--border-color)', borderRadius: '5px', background: 'var(--btn-base)', color: 'var(--text-main)', fontSize: '0.58rem', minWidth: '42px' }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  {lang.toUpperCase()}
-                </span>
-                <ChevronDownIcon size={8} />
-              </button>
-              {isLangOpen && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: '#070d1a', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1000, display: 'flex', flexDirection: 'column', minWidth: '40px', padding: '3px', boxShadow: '0 12px 28px rgba(0,0,0,0.9)', maxHeight: '400px', overflowY: 'auto' }}>
-                  {(Object.keys(langToCountry) as LangCode[]).map((l) => (
-                    <button
-                      key={l}
-                      className="lang-dropdown-item"
-                      onClick={() => { setLang(l as LangCode); setIsLangOpen(false); }}
-                      style={{ background: lang === l ? 'rgba(59, 130, 246, 0.18)' : 'transparent', border: 'none', color: lang === l ? 'var(--primary)' : 'var(--text-main)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', display: 'flex', gap: '5px', alignItems: 'center', fontSize: '0.62rem', transition: 'all 0.15s', flexShrink: 0 }}
-                      onMouseOver={(e) => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-                      onMouseOut={(e) => { if (lang !== l) e.currentTarget.style.background = 'transparent' }}
-                      title={langNativeNames[l]}
-                    >
-                      {l.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {keys && (
               <>
                 <div className="nav-sep" />
@@ -625,27 +624,9 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
                 <button className="btn-profile-sm" onClick={() => setShowNetworkPanel(true)} title={`${t.followers}/${t.following}`}>
                   <UsersIcon />
                 </button>
-                <button className="btn-profile-sm" onClick={() => setShowProfileModal(true)} title={t.editProfile}>
+                <button className="btn-profile-sm" onClick={() => setShowProfileModal(true)} title={t.profile}>
                   <ProfileIcon />
                 </button>
-                <div style={{ position: 'relative' }}>
-                  <button className="btn-profile-sm" onClick={() => setShowLogoutConfirm(true)} title={t.logout}>
-                    <LogoutIcon />
-                  </button>
-                  {showLogoutConfirm && (
-                    <div className="logout-confirm-popup" onClick={e => e.stopPropagation()}>
-                      <p className="logout-confirm-msg">{t.logoutConfirmMsg}</p>
-                      <div className="logout-confirm-actions">
-                        <button className="logout-confirm-btn-cancel" onClick={() => setShowLogoutConfirm(false)}>
-                          {t.cancel}
-                        </button>
-                        <button className="logout-confirm-btn-ok" onClick={() => { setShowLogoutConfirm(false); handleLogout(); }}>
-                          {t.logoutConfirmBtn}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </>
             )}
           </div>

@@ -361,15 +361,68 @@ describe('NoteCard — fetchProfile', () => {
         });
     });
 
-    it('deve exibir "Anon" quando perfil não tem name nem display_name', async () => {
+    it('deve exibir npub truncado (inicio…fim) quando perfil não tem name nem display_name', async () => {
         mockFetchProfile.mockImplementation((_pk: string, cb: (p: any) => void) => {
             cb({});
         });
 
         renderNote();
 
+        const expectedNpub = nip19.npubEncode(authorPk);
+        const expectedShort = expectedNpub.slice(0, 8) + '\u2026' + expectedNpub.slice(-4);
         await waitFor(() => {
-            expect(screen.getByText('Anon')).toBeInTheDocument();
+            expect(screen.getByText(expectedShort)).toBeInTheDocument();
+        });
+    });
+});
+
+// ── Exibição compacta do autor ────────────────────────────────────────────────
+describe('NoteCard — exibição compacta do autor', () => {
+    beforeEach(() => {
+        mockSubscribeToReactions.mockReturnValue(vi.fn());
+        mockFetchProfile.mockClear();
+    });
+
+    it('deve exibir apenas as 4 últimas letras da pubkey quando perfil tem nome', async () => {
+        mockFetchProfile.mockImplementation((_pk: string, cb: (p: any) => void) => {
+            cb({ display_name: 'Alice' });
+        });
+
+        renderNote();
+
+        const expectedNpub = nip19.npubEncode(authorPk);
+        const expectedNpubSuffix = '\u2026' + expectedNpub.slice(-4);
+        await waitFor(() => {
+            expect(screen.getByText('Alice')).toBeInTheDocument();
+            expect(screen.getByText(expectedNpubSuffix)).toBeInTheDocument();
+        });
+    });
+
+    it('deve exibir início…fim da pubkey quando perfil não tem nome', async () => {
+        mockFetchProfile.mockImplementation((_pk: string, cb: (p: any) => void) => {
+            cb({});
+        });
+
+        renderNote();
+
+        const expectedNpub = nip19.npubEncode(authorPk);
+        const expectedShort = expectedNpub.slice(0, 8) + '\u2026' + expectedNpub.slice(-4);
+        await waitFor(() => {
+            expect(screen.getByText(expectedShort)).toBeInTheDocument();
+        });
+    });
+
+    it('não deve exibir nome quando perfil está vazio (sem tag de nome)', async () => {
+        mockFetchProfile.mockImplementation((_pk: string, cb: (p: any) => void) => {
+            cb({});
+        });
+
+        renderNote();
+
+        // When no name, the author-name span should not be rendered
+        await waitFor(() => {
+            expect(screen.queryByText('Anon')).not.toBeInTheDocument();
+            expect(document.querySelector('.author-name')).toBeNull();
         });
     });
 });

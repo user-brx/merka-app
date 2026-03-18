@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, type FormEvent } from 'react';
+import React, { useState, useEffect, useRef, useMemo, type FormEvent } from 'react';
 import type { Translations, LangCode } from '../../i18n/translations';
 import { NoteCard, type NostrEvent } from '../../components/feed/NoteCard';
 import {
@@ -27,6 +27,7 @@ export interface FeedProps {
   onUnfollow: (pubkey: string) => Promise<void>;
   onOpenChat: (pubkey: string, npub: string) => void;
   onOpenZap: (pubkey: string, npub: string, noteId?: string, lud16?: string) => void;
+  onScrollHide?: (hidden: boolean) => void;
 }
 
 export function Feed({
@@ -65,6 +66,45 @@ export function Feed({
   const [searchResults, setSearchResults] = useState<NostrEvent[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchAbortRef = useRef<(() => void) | null>(null);
+  const feedColumnRef = useRef<HTMLDivElement>(null);
+  const postFormRef = useRef<HTMLElement>(null);
+  const lastScrollRef = useRef(0);
+  const [postFormHidden, setPostFormHidden] = useState(false);
+  // Refs for hysteresis — prevents layout-induced scroll event loop
+  const postFormHiddenRef = useRef(false);
+  const hideAnchorRef = useRef(0);
+
+  const getPostFormStyle = (): React.CSSProperties | undefined => {
+    if (!postFormHidden) return undefined;
+    const h = postFormRef.current?.offsetHeight ?? 150;
+    return { marginTop: `-${h}px`, opacity: 0, pointerEvents: 'none' };
+  };
+
+  useEffect(() => {
+    const el = feedColumnRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const cur = el.scrollTop;
+      const prev = lastScrollRef.current;
+      lastScrollRef.current = cur;
+      if (!postFormHiddenRef.current) {
+        // Hide only when scrolling DOWN by at least 3px and past 80px total
+        if (cur > 80 && cur - prev > 2) {
+          postFormHiddenRef.current = true;
+          hideAnchorRef.current = cur;
+          setPostFormHidden(true);
+        }
+      } else {
+        // Show only after scrolling UP 80px from the hide anchor point
+        if (cur < hideAnchorRef.current - 80) {
+          postFormHiddenRef.current = false;
+          setPostFormHidden(false);
+        }
+      }
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('merka_search_tag', searchFilterTag);
@@ -75,7 +115,6 @@ export function Feed({
     localStorage.setItem('merka_search_lang', searchFilterLang);
   }, [searchQuery, searchFilterType, searchFilterLang]);
 
-  const [collapsePostForm, setCollapsePostForm] = useState(false);
   const [newPost, setNewPost] = useState('');
   const [postType, setPostType] = useState<'buy' | 'sell'>(() => {
     const saved = localStorage.getItem('merka_post_type');
@@ -98,6 +137,25 @@ export function Feed({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const hasMerkaTag = (n: NostrEvent) => n.tags.some(tag => tag[0] === 't' && tag[1] === APP_GUID);
+
+  // Initial batch load on mount — relays don't always return history via subscriptions
+  useEffect(() => {
+    const since = Math.floor(Date.now() / 1000) - 86400;
+    const until = Math.floor(Date.now() / 1000);
+    fetchNotesBatch({
+      since,
+      until,
+      onEvent: (ev: NostrEvent) => {
+        if (!ev.tags.some(tag => tag[0] === 't' && tag[1] === APP_GUID)) return;
+        setGlobalNotes(prev => {
+          if (prev.some(n => n.id === ev.id)) return prev;
+          return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
+        });
+      },
+      onDone: () => {},
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Global / Merka feed
   useEffect(() => {
@@ -234,8 +292,13 @@ export function Feed({
     });
   };
 
-  const formatTime = (ts: number) => new Date(ts * 1000).toLocaleString();
-  const truncateKey = (key: string) => key ? `${key.slice(0, 8)}...${key.slice(-6)}` : '';
+  const formatTime = (ts: number) => {
+    const d = new Date(ts * 1000);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    if (sameDay) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const extractMsg = (content: string): string => {
     try { return (JSON.parse(content) as { msg?: string }).msg ?? content; } catch { return content; }
@@ -305,77 +368,72 @@ export function Feed({
 
   return (
     <>
-      <section className="glass-panel panel-collapsible" style={{ padding: collapsePostForm ? '.45rem 1.2rem' : '.8rem 1.2rem' }}>
+      <section ref={postFormRef as React.RefObject<HTMLElement>} className="glass-panel panel-collapsible" style={{ padding: '.5rem 1rem', ...getPostFormStyle() }}>
         <div className="panel-collapse-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <span className="panel-collapse-label">{t.post}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <span className="panel-collapse-label" style={{ flexShrink: 0 }}>{t.post}</span>
             {friendlyName && (
-              <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{friendlyName}</span>
+              <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90px' }}>{friendlyName}</span>
             )}
-            <span style={{ fontSize: '.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{truncateKey(keys.npub)}</span>
+            <span style={{ fontSize: '.68rem', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {friendlyName ? '…' + keys.npub.slice(-4) : keys.npub.slice(0, 8) + '…' + keys.npub.slice(-4)}
+            </span>
             <button
               type="button"
               aria-label={t.copied}
               onClick={() => navigator.clipboard.writeText(keys.npub).then(() => showGlobalToast(t.copied))}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.15rem', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
             >
               <CopyIcon />
             </button>
           </div>
-          <button
-            type="button"
-            className="panel-toggle-btn"
-            aria-label="toggle post form"
-            onClick={() => setCollapsePostForm(v => !v)}
-          >
-            <span className={`panel-toggle-chevron${collapsePostForm ? ' collapsed' : ''}`}>▲</span>
-          </button>
         </div>
-        {!collapsePostForm && <>
-          <form className="post-form" onSubmit={handlePost} style={{ marginTop: '.4rem' }}>
-            <textarea
-              placeholder={t.whatsOnMind}
-              value={newPost}
-              onChange={e => setNewPost(e.target.value)}
-              style={{ minHeight: '80px' }}
-              disabled={publishing} />
-            <div className="post-form-footer">
-              <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
-                <div className="post-type-toggle">
-                  <button
-                    type="button"
-                    className={`post-type-btn sell${postType === 'sell' ? ' active' : ''}`}
-                    onClick={() => setPostType('sell')}
-                  >
-                    📦 {t.sell}
-                  </button>
-                  <button
-                    type="button"
-                    className={`post-type-btn buy${postType === 'buy' ? ' active' : ''}`}
-                    onClick={() => setPostType('buy')}
-                  >
-                    🛒 {t.buy}
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  maxLength={10}
-                  placeholder={t.tagPlaceholder || 'Tag (opt)'}
-                  value={postTag}
-                  onChange={e => setPostTag(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  style={{
-                    padding: '0.4rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem',
-                    border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card)',
-                    color: 'var(--text-main)', width: '90px'
-                  }}
-                />
-                <button type="submit" disabled={publishing || !newPost.trim()} className="btn-small">
-                  {publishing ? t.publishing : t.publishNote}
+        <form className="post-form" onSubmit={handlePost} style={{ marginTop: '.35rem' }}>
+          <textarea
+            placeholder={t.whatsOnMind}
+            value={newPost}
+            onChange={e => setNewPost(e.target.value)}
+            style={{ height: '72px', resize: 'none' }}
+            disabled={publishing} />
+          <div className="post-form-footer">
+            <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+              <div className="post-type-toggle">
+                <button
+                  type="button"
+                  className={`post-type-btn sell${postType === 'sell' ? ' active' : ''}`}
+                  onClick={() => setPostType('sell')}
+                  aria-label={t.sell}
+                >
+                  📦<span className="btn-label"> {t.sell}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`post-type-btn buy${postType === 'buy' ? ' active' : ''}`}
+                  onClick={() => setPostType('buy')}
+                  aria-label={t.buy}
+                >
+                  🛒<span className="btn-label"> {t.buy}</span>
                 </button>
               </div>
+              <input
+                type="text"
+                className="post-tag-input"
+                maxLength={10}
+                placeholder={t.tagPlaceholder || 'Tag (opt)'}
+                value={postTag}
+                onChange={e => setPostTag(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                style={{
+                  padding: '0.4rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem',
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card)',
+                  color: 'var(--text-main)', width: '90px'
+                }}
+              />
+              <button type="submit" disabled={publishing || !newPost.trim()} className="btn-small">
+                {publishing ? t.publishing : t.publishNote}
+              </button>
             </div>
-          </form>
-        </>}
+          </div>
+        </form>
       </section>
 
       <section className="glass-panel feed-panel">
@@ -393,6 +451,7 @@ export function Feed({
           </div>
         </div>
 
+        <div className="search-filters-group">
         <div className="search-bar-row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '.5rem' }}>
           <div className="search-input-wrap" style={{ flex: 1, minWidth: '150px' }}>
             <span className="search-icon"><SearchIcon size={14} /></span>
@@ -479,8 +538,9 @@ export function Feed({
               </button>
             )}</div>
         </div>
+        </div>
 
-        <div className="feed-column">
+        <div className="feed-column" ref={feedColumnRef}>
           {searchQuery.trim() ? (
             (() => {
               const allLoaded = [...new Map([

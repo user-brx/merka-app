@@ -6,6 +6,7 @@ type Rumor = UnsignedEvent & { id: string };
 import { publishEncryptedDM, subscribeToConversation, fetchProfile } from '../../services/nostr/nostr';
 import type { Translations } from '../../i18n/translations';
 import { ZapIcon, XIcon, LockIcon } from '../ui/icons';
+import { useDragToClose } from '../../hooks/useDragToClose';
 
 interface ChatMessage {
     id: string;
@@ -33,6 +34,7 @@ export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpe
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const targetNpub = nip19.npubEncode(targetPubkey);
     const [targetProfile, setTargetProfile] = useState<Record<string, string>>({});
+    const dragProps = useDragToClose(onClose);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -107,7 +109,8 @@ export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpe
     const PREVIEW_LEN = 140;
 
     return (
-        <div className="chat-panel-sidebar glass-panel">
+        <div className="chat-panel-sidebar glass-panel" {...dragProps}>
+            <div className="chat-drag-handle" aria-hidden="true" />
             <div className="chat-header">
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <h3

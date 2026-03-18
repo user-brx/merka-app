@@ -197,6 +197,9 @@ export function NoteCard({
     const isLiked = likedIds.has(note.id);
     const isFollowed = followedPks.has(note.pubkey);
     const npub = nip19.npubEncode(note.pubkey);
+    const hasName = !!(profile?.display_name || profile?.name);
+    const displayName = profile?.display_name || profile?.name || '';
+    const npubShort = hasName ? '\u2026' + npub.slice(-4) : npub.slice(0, 8) + '\u2026' + npub.slice(-4);
 
     useEffect(() => {
         fetchProfile(note.pubkey, p => setProfile(p as Record<string, string>));
@@ -260,8 +263,8 @@ export function NoteCard({
                             </span>
                         );
                     })()}
-                    <span className="author-name">{profile?.display_name || profile?.name || 'Anon'}</span>
-                    <span className="author-npub">{npub.slice(0, 10)}...</span>
+                    {hasName && <span className="author-name">{displayName}</span>}
+                    <span className="author-npub">{npubShort}</span>
                 </div>
                 <div className="note-meta">
                     {formatTime(note.created_at)}
@@ -276,14 +279,15 @@ export function NoteCard({
                     className={`note-action-btn like${isLiked ? ' liked' : ''}`}
                     onClick={handleLike}
                     disabled={!myKeys || isLiked}
+                    aria-label={likeCount > 0 ? `${likeCount} ${t.like}` : t.like}
                 >
                     <HeartIcon filled={isLiked} />
-                    {likeCount > 0 ? likeCount : t.like}
+                    <span className="btn-label">{likeCount > 0 ? likeCount : t.like}</span>
                 </button>
 
                 {!isMe && myKeys && (
-                    <button className="note-action-btn dm" onClick={() => onOpenChat(note.pubkey, npub)}>
-                        <ChatHistoryIcon />{t.secretChat}
+                    <button className="note-action-btn dm" onClick={() => onOpenChat(note.pubkey, npub)} aria-label={t.secretChat}>
+                        <ChatHistoryIcon /><span className="btn-label">{t.secretChat}</span>
                     </button>
                 )}
 
@@ -292,9 +296,10 @@ export function NoteCard({
                         className={`note-action-btn follow${isFollowed ? ' following' : ''}`}
                         onClick={handleFollow}
                         disabled={!myKeys || isFollowed}
+                        aria-label={isFollowed ? t.following : t.follow}
                     >
                         <UserPlusIcon />
-                        {isFollowed ? t.following : t.follow}
+                        <span className="btn-label">{isFollowed ? t.following : t.follow}</span>
                     </button>
                 )}
             </div>

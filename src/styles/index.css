@@ -905,7 +905,7 @@ textarea {
   gap: .3rem;
   flex-wrap: wrap;
   align-items: center;
-  padding-top: .55rem;
+  padding-top: .3rem;
   border-top: 1px solid var(--border-color);
 }
 
@@ -918,7 +918,8 @@ textarea {
   color: var(--text-muted);
   font-size: .75rem;
   font-weight: 500;
-  padding: .28rem .6rem;
+  line-height: 1;
+  padding: .2rem .5rem;
   border-radius: 7px;
   cursor: pointer;
   transition: all .18s;
@@ -1319,6 +1320,46 @@ textarea {
   padding-top: 1.25rem;
   border-top: 1px solid var(--border-color);
   background: inherit;
+}
+
+.profile-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem .75rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.profile-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .75rem;
+  padding: .3rem .6rem;
+  color: var(--danger);
+  border-radius: 7px;
+  border: 1px solid rgba(239,68,68,0.25);
+  background: rgba(239,68,68,0.08);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.profile-logout-btn:hover {
+  background: rgba(239,68,68,0.16);
+}
+
+.profile-logout-confirm {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + .4rem);
+  background: rgba(15,22,36,0.98);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: .75rem;
+  min-width: 220px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
 .profile-modal-header {
@@ -1985,8 +2026,9 @@ textarea {
 }
 
 .note-meta {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* Custom Scrollbar */
@@ -2075,6 +2117,16 @@ textarea {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+.chat-drag-handle {
+  display: none;
+  width: 36px;
+  height: 4px;
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 2px;
+  margin: 0.6rem auto 0;
+  flex-shrink: 0;
+}
+
 /* ── Responsive Widths ── */
 @media (min-width: 768px) {
   .app-container {
@@ -2114,6 +2166,10 @@ textarea {
     align-items: center;
     justify-content: center;
     padding: 1rem;
+  }
+
+  .chat-drag-handle {
+    display: block;
   }
 
   .chat-panel-sidebar {
@@ -2258,7 +2314,10 @@ textarea {
   }
 
   .note-actions {
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: .2rem;
+    padding-top: .2rem;
+    margin-top: .35rem;
   }
 
   .note-action-btn.profile-btn {
@@ -2268,9 +2327,13 @@ textarea {
   /* Touch targets mínimos 44px de altura (iOS guidelines) — botões de ação */
   button,
   .btn-icon,
-  .note-action-btn,
   .info-pill-btn {
     min-height: 44px;
+  }
+
+  /* Note action buttons (like/chat/follow) use compact 32px target */
+  .note-action-btn {
+    min-height: 32px !important;
   }
 
   /* Botões compactos da board: mantêm altura reduzida mesmo no mobile */
@@ -2287,24 +2350,59 @@ textarea {
     min-height: 30px;
   }
 
+  /* Note action buttons: icon-only no mobile — esconde labels de texto */
+  .btn-label {
+    display: none;
+  }
+
   .note-action-btn {
-    padding: .5rem .75rem;
-    font-size: .8rem;
+    padding: .22rem .42rem;
+    font-size: .78rem;
+    gap: .15rem;
+  }
+
+  /* Post form footer: linha única horizontal compacta */
+  .post-form-footer {
+    flex-direction: row !important;
+    align-items: center;
+    gap: .35rem;
+  }
+
+  .post-form-footer > div {
+    gap: .35rem !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .post-tag-input {
+    width: 58px !important;
+  }
+
+  .post-type-btn {
+    padding: .2rem .45rem;
+    min-height: 30px;
   }
 
   .btn-icon {
     padding: .5rem;
   }
 
-  /* Chat em mobile — usa dvh (dynamic viewport height) para não ser coberto pelo teclado */
+  /* Chat em mobile — bottom sheet ancorado na parte inferior (como modal-overlay) */
+  .app-aside {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .chat-panel-sidebar {
-    height: calc(100dvh - 120px);
-    height: calc(100vh - 120px);
+    border-radius: 20px 20px 0 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 90dvh !important;
+    height: 90vh !important;
     /* fallback */
     min-height: 320px;
-    max-height: 85dvh;
-    max-height: 85vh;
-    /* fallback */
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
 
   /* Modais em mobile — bottom sheet ancorado na parte inferior do viewport visível */
@@ -2401,6 +2499,7 @@ textarea {
 /* Safe area para iPhone X+ (notch / Dynamic Island) */
 @supports (padding: max(0px)) {
   .app-container {
+    padding-top: max(1.25rem, env(safe-area-inset-top));
     padding-left: max(1.25rem, env(safe-area-inset-left));
     padding-right: max(1.25rem, env(safe-area-inset-right));
     padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
@@ -2882,6 +2981,21 @@ textarea {
   color: var(--primary);
 }
 
+/* ── Search Filters Group ── */
+.search-filters-group {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding: 0.45rem 0.55rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-filters-group .search-bar-row {
+  margin-bottom: 0;
+}
+
 /* ── Collapsible Panels ── */
 
 /* Row holding the brand + collapse toggle in the header */
@@ -2899,11 +3013,11 @@ textarea {
   align-items: center;
   justify-content: space-between;
   user-select: none;
-  padding: 0.1rem 0;
-  margin-bottom: 0.4rem;
+  padding: 0.05rem 0;
+  margin-bottom: 0.25rem;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.4rem;
-  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  gap: 0.4rem;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -2945,10 +3059,11 @@ textarea {
   transform: rotate(180deg);
 }
 
-/* When the post form panel header is clicked, tighten up padding */
+/* Post board auto-hide animation (margin-top slides it out like the navbar) */
 .panel-collapsible {
-  transition: padding 0.2s;
+  transition: padding 0.2s, margin-top 0.3s ease, opacity 0.2s ease;
 }
+
 
 /* ── Animations ── */
 @keyframes slideDown {

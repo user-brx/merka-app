@@ -90,7 +90,7 @@ Merka is built entirely on open standards and open-source libraries, with **no e
 | [@testing-library/user-event](https://testing-library.com/docs/user-event/intro) | Realistic user interaction simulation |
 | jsdom | Browser environment for tests |
 
-**Coverage:** 351 tests across 11 test files covering all Nostr protocol functions, UI components, modals, hooks, i18n completeness (15 languages), and security boundaries.
+**Coverage:** 379 tests across 12 test files covering all Nostr protocol functions, UI components, modals, hooks, i18n completeness (15 languages), and security boundaries.
 
 ```bash
 npm test              # run all tests
@@ -209,6 +209,7 @@ npm run preview
 │   │   └── Feed/
 │   │       ├── Feed.tsx           # Main feed — subscribe, post, reactions
 │   │       ├── ProfilePanel.tsx   # Edit profile (name, bio, lud16, BTC address, NIP-05)
+│   │       ├── ProfilePanel.test.tsx
 │   │       ├── ChatHistoryPanel.tsx # DM history with unread badge
 │   │       ├── KeyWarningModal.tsx  # Secure nsec display after key creation
 │   │       ├── ZapModal.tsx         # ⚡ Lightning + ₿ Bitcoin payment modal (tabs, BOLT11, QR)
@@ -260,7 +261,7 @@ Please follow the existing conventions:
 - No external UI libraries — custom CSS only
 - All visible text must use `t.key` from `src/i18n/translations.ts`
 - New i18n keys must be added to all 15 languages
-- Run `npm test` — all 347 tests must pass
+- Run `npm test` — all 379 tests must pass
 - Run `npm run build` before submitting — zero TypeScript errors required
 
 ---

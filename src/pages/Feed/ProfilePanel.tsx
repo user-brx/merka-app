@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Translations } from '../../i18n/translations';
 import { fetchProfile, publishProfile } from '../../services/nostr/nostr';
-import { CopyIcon, EditIcon, ExternalLinkIcon, HelpCircleIcon, XIcon } from '../../components/ui/icons';
+import { CopyIcon, EditIcon, ExternalLinkIcon, HelpCircleIcon, LogoutIcon, XIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; bitcoin?: string; }
@@ -12,15 +12,17 @@ export interface ProfilePanelProps {
   onClose: () => void;
   onUpdate: (p: ProfileData) => void;
   onToast: (msg: string) => void;
+  onLogout?: () => void;
 }
 
-export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePanelProps) {
-  const dragProps = useDragToClose(onClose);
+export function ProfilePanel({ t, keys, onClose, onUpdate, onToast, onLogout }: ProfilePanelProps) {
+  const dragProps = useDragToClose(onClose, 72, 80);
   const [profile, setProfile] = useState<ProfileData>({});
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nsecCopied, setNsecCopied] = useState(false);
   const [npubCopied, setNpubCopied] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     fetchProfile(keys.pk, (p: unknown) => setProfile(p as ProfileData));
@@ -66,19 +68,16 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
   return (
     <div className="modal-overlay" onClick={editing ? undefined : onClose}>
       <div className="modal-box profile-modal-box" onClick={e => e.stopPropagation()} {...dragProps}>
+
         <div className="profile-modal-header">
           <div className="profile-avatar-placeholder">
             {keys.npub.slice(-2).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flexWrap: 'wrap', marginBottom: '.3rem' }}>
-              <h3 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0, flex: '1 1 auto', minWidth: 0 }}>
+            <div style={{ marginBottom: '.3rem' }}>
+              <h3 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
                 {profile.display_name || profile.name || 'Anonymous'}
               </h3>
-              <a href={`https://primal.net/p/${keys.npub}`} target="_blank" rel="noopener noreferrer"
-                className="primal-link-btn" title={t.openInApp}>
-                <ExternalLinkIcon /> Primal
-              </a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
               <div className="profile-pubkey-chip" style={{ flex: 'none' }}>
@@ -136,6 +135,42 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast }: ProfilePan
               <button onClick={() => setEditing(true)} style={{ flex: 1, background: 'var(--primary)' }}>
                 <EditIcon /> {t.editProfile}
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom bar: Primal link (left) + Logout (right) */}
+        <div className="profile-top-bar">
+          <a href={`https://primal.net/p/${keys.npub}`} target="_blank" rel="noopener noreferrer"
+            className="primal-link-btn" title={t.openInApp}>
+            <ExternalLinkIcon /> Primal
+          </a>
+          {onLogout && (
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn-icon profile-logout-btn"
+                onClick={() => setShowLogoutConfirm(true)}
+                title={t.logout}
+                aria-label={t.logout}
+              >
+                <LogoutIcon /> {t.logout}
+              </button>
+              {showLogoutConfirm && (
+                <div className="profile-logout-confirm" onClick={e => e.stopPropagation()}>
+                  <div style={{ fontSize: '.82rem', fontWeight: 600, marginBottom: '.35rem' }}>{t.logout}?</div>
+                  <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginBottom: '.6rem', lineHeight: 1.4 }}>{t.logoutConfirmMsg}</div>
+                  <div style={{ display: 'flex', gap: '.5rem' }}>
+                    <button onClick={() => setShowLogoutConfirm(false)}
+                      style={{ flex: 1, fontSize: '.75rem', padding: '.3rem', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', borderRadius: '6px' }}>
+                      {t.cancel}
+                    </button>
+                    <button onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
+                      style={{ flex: 1, fontSize: '.75rem', padding: '.3rem', background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', borderRadius: '6px' }}>
+                      {t.logoutConfirmBtn}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
