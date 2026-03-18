@@ -823,6 +823,7 @@ textarea {
   min-height: 0;
   max-height: none;
   overflow-y: auto;
+  overflow-anchor: none;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -936,9 +937,10 @@ textarea {
 
 @media (max-width: 600px) {
   .note-action-btn {
-    padding: .18rem .4rem;
+    padding: .15rem .3rem !important;
     font-size: .68rem;
     gap: .2rem;
+    min-height: 28px !important;
   }
 }
 
@@ -2035,28 +2037,28 @@ textarea {
 .note-content::-webkit-scrollbar,
 .chat-messages::-webkit-scrollbar,
 .feed-column::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
 }
 
 .note-content::-webkit-scrollbar-track,
 .chat-messages::-webkit-scrollbar-track,
 .feed-column::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   border-radius: 10px;
 }
 
 .note-content::-webkit-scrollbar-thumb,
 .chat-messages::-webkit-scrollbar-thumb,
 .feed-column::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
-  /* Increased opacity */
+  background: rgba(139, 92, 246, 0.3);
+  /* Decreased opacity */
   border-radius: 10px;
 }
 
 .note-content::-webkit-scrollbar-thumb:hover,
 .chat-messages::-webkit-scrollbar-thumb:hover,
 .feed-column::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.5);
+  background: rgba(139, 92, 246, 0.4);
 }
 
 .feed-column {
@@ -2226,7 +2228,7 @@ textarea {
   }
 
   .glass-panel {
-    padding: 0.85rem;
+    padding: 0.4rem;
   }
 
   /* ── Mobile header: 2 linhas (brand+botões / expandível) ── */
@@ -2316,8 +2318,8 @@ textarea {
   .note-actions {
     justify-content: flex-start;
     gap: .2rem;
-    padding-top: .2rem;
-    margin-top: .35rem;
+    padding-top: .25rem;
+    margin-top: .2rem;
   }
 
   .note-action-btn.profile-btn {
@@ -2328,12 +2330,12 @@ textarea {
   button,
   .btn-icon,
   .info-pill-btn {
-    min-height: 44px;
+    min-height: unset;
   }
 
-  /* Note action buttons (like/chat/follow) use compact 32px target */
+  /* Note action buttons (like/chat/follow) use compact target */
   .note-action-btn {
-    min-height: 32px !important;
+    min-height: 24px !important;
   }
 
   /* Botões compactos da board: mantêm altura reduzida mesmo no mobile */
@@ -2351,13 +2353,13 @@ textarea {
   }
 
   /* Note action buttons: icon-only no mobile — esconde labels de texto */
-  .btn-label {
+  .note-action-btn .btn-label {
     display: none;
   }
 
   .note-action-btn {
-    padding: .22rem .42rem;
-    font-size: .78rem;
+    padding: .1rem .2rem !important;
+    font-size: .65rem;
     gap: .15rem;
   }
 
@@ -2507,10 +2509,18 @@ textarea {
 
   @media (max-width: 600px) {
     .app-container {
-      padding-left: max(0.75rem, env(safe-area-inset-left));
-      padding-right: max(0.75rem, env(safe-area-inset-right));
-      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      padding-top: max(0.4rem, env(safe-area-inset-top));
+      padding-left: max(0.2rem, env(safe-area-inset-left));
+      padding-right: max(0.2rem, env(safe-area-inset-right));
+      padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
     }
+
+    .note-card {
+      padding: 0.4rem 0.6rem;
+    }
+
+    .note-header { margin-bottom: 0.25rem; }
+    .note-content { margin-bottom: 0.25rem; }
 
     /* Chat: input row acima do home indicator no iPhone 15 */
     .chat-input-row {
@@ -2566,7 +2576,10 @@ textarea {
   input[type="email"],
   input[type="search"],
   textarea,
-  select {
+  select,
+  .search-input,
+  .post-tag-input,
+  .tag-dropdown-search {
     font-size: 16px !important;
   }
 }

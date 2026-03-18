@@ -11,7 +11,7 @@ import {
   fetchNotesBatch
 } from '../../services/nostr/nostr';
 import { APP_GUID, MERKA_PUBKEY } from '../../config/constants';
-import { CopyIcon, SearchIcon } from '../../components/ui/icons';
+import { SearchIcon } from '../../components/ui/icons';
 
 export interface FeedProps {
   t: Translations;
@@ -72,36 +72,63 @@ export function Feed({
   const [postFormHidden, setPostFormHidden] = useState(false);
   // Refs for hysteresis — prevents layout-induced scroll event loop
   const postFormHiddenRef = useRef(false);
-  const hideAnchorRef = useRef(0);
+  const isAnimatingRef = useRef(false);
 
   const getPostFormStyle = (): React.CSSProperties | undefined => {
     if (!postFormHidden) return undefined;
-    const h = postFormRef.current?.offsetHeight ?? 150;
-    return { marginTop: `-${h}px`, opacity: 0, pointerEvents: 'none' };
+    // Slide up via negative margin to hide beneath the top nav,
+    // and fade out. 'overflow-anchor: none' in CSS prevents the scroll jitter loop!
+    return { 
+      marginTop: '-160px', 
+      opacity: 0, 
+      pointerEvents: 'none',
+      marginBottom: '1rem' // preserve a little gap while it vanishes
+    };
   };
 
   useEffect(() => {
     const el = feedColumnRef.current;
     if (!el) return;
+    
+    // Accumulators to track continuous scroll distance in one direction
+    let scrollDownAcc = 0;
+    let scrollUpAcc = 0;
+
     const onScroll = () => {
       const cur = el.scrollTop;
       const prev = lastScrollRef.current;
+      const delta = cur - prev;
       lastScrollRef.current = cur;
-      if (!postFormHiddenRef.current) {
-        // Hide only when scrolling DOWN by at least 3px and past 80px total
-        if (cur > 80 && cur - prev > 2) {
+
+      // Ignore programmatic scroll jumps caused by our own height animations
+      if (isAnimatingRef.current) return;
+
+      if (delta > 0) {
+        // Scrolling DOWN
+        scrollDownAcc += delta;
+        scrollUpAcc = 0; // reset up accumulator
+        
+        if (!postFormHiddenRef.current && cur > 50 && scrollDownAcc > 20) {
           postFormHiddenRef.current = true;
-          hideAnchorRef.current = cur;
           setPostFormHidden(true);
+          // Lock scroll listener during CSS transition to prevent fake layout-shift scroll events driving an infinite loop
+          isAnimatingRef.current = true;
+          setTimeout(() => { isAnimatingRef.current = false; }, 400);
         }
-      } else {
-        // Show only after scrolling UP 80px from the hide anchor point
-        if (cur < hideAnchorRef.current - 80) {
+      } else if (delta < 0) {
+        // Scrolling UP
+        scrollUpAcc += Math.abs(delta);
+        scrollDownAcc = 0; // reset down accumulator
+        
+        if (postFormHiddenRef.current && (scrollUpAcc > 40 || cur < 20)) {
           postFormHiddenRef.current = false;
           setPostFormHidden(false);
+          isAnimatingRef.current = true;
+          setTimeout(() => { isAnimatingRef.current = false; }, 400);
         }
       }
     };
+
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
@@ -375,17 +402,6 @@ export function Feed({
             {friendlyName && (
               <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '.78rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90px' }}>{friendlyName}</span>
             )}
-            <span style={{ fontSize: '.68rem', color: 'var(--text-muted)', fontFamily: 'monospace', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {friendlyName ? '…' + keys.npub.slice(-4) : keys.npub.slice(0, 8) + '…' + keys.npub.slice(-4)}
-            </span>
-            <button
-              type="button"
-              aria-label={t.copied}
-              onClick={() => navigator.clipboard.writeText(keys.npub).then(() => showGlobalToast(t.copied))}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.15rem', color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
-            >
-              <CopyIcon />
-            </button>
           </div>
         </div>
         <form className="post-form" onSubmit={handlePost} style={{ marginTop: '.35rem' }}>
@@ -463,7 +479,7 @@ export function Feed({
               onKeyDown={e => e.key === 'Enter' && handleNostrSearch()}
             />
             {searchQuery && (
-              <button className="search-clear-btn" onClick={clearSearch} title="Clear">✕</button>
+              <button className="search-clear-btn" onClick={clearSearch} title={t.clearSearch}>✕</button>
             )}
           </div>
           {searchQuery.trim() && (
@@ -490,7 +506,7 @@ export function Feed({
                 <input
                   autoFocus
                   className="tag-dropdown-search"
-                  placeholder="filter..."
+                  placeholder={t.tagFilterPlaceholder}
                   value={tagInputValue}
                   onChange={e => setTagInputValue(e.target.value.replace(/[^a-z0-9-]/gi, '').toLowerCase())}
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-color)', borderRadius: '5px', color: 'var(--text-main)', fontSize: '0.62rem', padding: '3px 6px', outline: 'none', marginBottom: '2px', width: '100%', boxSizing: 'border-box' }}
@@ -509,7 +525,7 @@ export function Feed({
                   ><span style={{ opacity: 0.4, fontSize: '0.55rem' }}>#</span>{tag}</button>
                 ))}
                 {filteredTagSuggestions.length === 0 && (
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', padding: '4px 6px', fontStyle: 'italic' }}>no tags</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', padding: '4px 6px', fontStyle: 'italic' }}>{t.noTagsFound}</span>
                 )}
               </div>
             )}

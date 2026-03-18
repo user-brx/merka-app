@@ -1,0 +1,8 @@
+feat(ui): refine mobile layout, clarify search, and fix scroll bugs
+
+- Compressed vertical margins/padding for note cards on mobile
+- Shrunk and adjusted scrollbar styles
+- Restored 'Buy'/'Sell' labels on mobile post board
+- Clarified multi-field network search in translations
+- Removed unused copy pubkey from post header
+- Fixed layout collapse and scroll jumping on iPhone 15

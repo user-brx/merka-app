@@ -79,11 +79,11 @@ export function LoginScreen({ t, loginError, onLogin, onCreateAccount }: LoginPr
         {showProfileFields && (
           <div className="profile-accordion-body">
             {[
-              { label: t.username, value: profileName, setter: setProfileName, placeholder: 'satoshi', type: 'text', help: 'Seu nome de usuário único (ex: satoshi)' },
-              { label: t.displayName, value: profileDisplayName, setter: setProfileDisplayName, placeholder: 'Satoshi Nakamoto', type: 'text', help: 'Nome que será exibido publicamente' },
-              { label: t.bio, value: profileBio, setter: setProfileBio, placeholder: 'Builder, trader…', type: 'text', help: 'Uma breve descrição sobre você' },
-              { label: t.website, value: profileWebsite, setter: setProfileWebsite, placeholder: 'https://...', type: 'url', help: 'Seu site pessoal ou profissional' },
-              { label: t.lightningAddress, value: profileLud16, setter: setProfileLud16, placeholder: 'you@walletofsatoshi.com', type: 'text', help: 'Endereço Lightning para receber pagamentos' },
+              { label: t.username, value: profileName, setter: setProfileName, placeholder: 'satoshi', type: 'text', help: t.helpUsername },
+              { label: t.displayName, value: profileDisplayName, setter: setProfileDisplayName, placeholder: 'Satoshi Nakamoto', type: 'text', help: t.helpDisplayName },
+              { label: t.bio, value: profileBio, setter: setProfileBio, placeholder: t.bioPlaceholder || 'Builder, trader…', type: 'text', help: t.helpBio },
+              { label: t.website, value: profileWebsite, setter: setProfileWebsite, placeholder: 'https://...', type: 'url', help: t.helpWebsite },
+              { label: t.lightningAddress, value: profileLud16, setter: setProfileLud16, placeholder: 'you@walletofsatoshi.com', type: 'text', help: t.helpLud16 },
             ].map(f => (
               <div key={f.label} className="form-group">
                 <div className="profile-field-label">
