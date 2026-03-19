@@ -4,6 +4,8 @@ export const APP_GUID = 'merka-app-9f8a2b3c';
 export const APP_VERSION = __APP_VERSION__;
 
 export const MERKA_NPUB = 'npub16djn9xucugk5wp76x0trhvy5eldv3juzwq92jng72ax26puzeyls327tm6';
+export const GITHUB_REPO = 'https://github.com/user-brx/merka-app';
+export const GITHUB_PAGES = 'https://user-brx.github.io/merka-app/';
 
 // Decode npub to hex pubkey for filtering and tagging
 export const MERKA_PUBKEY = (() => {

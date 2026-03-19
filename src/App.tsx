@@ -518,9 +518,11 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
         />
       )}
 
-      {/* Navigation bar */}
-      <header className="top-nav">
-        <div className="nav-top-line">
+      <main className={`main-content-layout${!keys ? ' auth-mode' : ''}`}>
+        <div className={`feed-and-entry${!keys ? ' auth-mode' : ''}`}>
+          {/* Navigation bar */}
+          <header className="top-nav">
+            <div className="nav-top-line">
           <div className="brand" onClick={() => setShowAboutMerka(true)} style={{ cursor: 'pointer' }} title={t.aboutMerka}>
             <div className="brand-icon"><GlobeIcon size={20} /></div>
           </div>
@@ -633,8 +635,6 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
         </div>
       </header>
 
-      <main className={`main-content-layout${!keys ? ' auth-mode' : ''}`}>
-        <div className={`feed-and-entry${!keys ? ' auth-mode' : ''}`}>
           {!keys ? (
             <LoginScreen
               t={t}

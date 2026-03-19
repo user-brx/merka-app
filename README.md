@@ -9,6 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org)
 [![Nostr](https://img.shields.io/badge/Nostr-Protocol-orange.svg)](https://nostr.com)
 [![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](package.json)
+[![Website](https://img.shields.io/badge/Deploy-GitHub_Pages-blue.svg)](https://user-brx.github.io/merka-app/)
 
 </div>
 
@@ -17,6 +18,8 @@
 ## What is Merka?
 
 Merka is a **free, open-source, censorship-resistant marketplace** built on the [Nostr](https://nostr.com) protocol. It allows anyone in the world to buy, sell, and trade goods and services without relying on any central server, company, or intermediary.
+
+🔗 **[Open Merka Web App](https://user-brx.github.io/merka-app/)** directly in your browser.
 
 No accounts with companies. No phone numbers. No email addresses. Just your cryptographic identity — yours alone, forever.
 

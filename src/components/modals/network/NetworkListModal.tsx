@@ -54,7 +54,13 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
 
     // Relay-wide profile search when text search is active
     useEffect(() => {
-        if (!isTextSearch) { setRelaySearchPks([]); setIsSearching(false); return; }
+        if (!isTextSearch) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setRelaySearchPks([]);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsSearching(false);
+            return;
+        }
         setIsSearching(true);
         const stop = searchNostrProfiles(
             raw,
