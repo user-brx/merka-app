@@ -16,7 +16,7 @@ export function ChatHistoryPanel({
   const dragProps = useDragToClose(onClose);
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(380px, 100%)' }}>
+      <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(380px, 100%)', maxHeight: '86vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
             <div className="modal-header-icon icon-lock"><LockIcon size={18} /></div>
@@ -27,8 +27,8 @@ export function ChatHistoryPanel({
         {contacts.length === 0 ? (
           <p style={{ textAlign: 'center', opacity: .5, padding: '1.5rem 0' }}>{t.noChatHistory}</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
-            {contacts.map(c => {
+          <div className="modal-list-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', flex: 1, overflowY: 'auto', overscrollBehavior: 'contain' }}>
+            {[...contacts].reverse().map(c => {
               const isUnread = unreadPks.has(c.pubkey);
               return (
                 <div key={c.pubkey} style={{ display: 'flex' }}>
@@ -38,12 +38,16 @@ export function ChatHistoryPanel({
                       flex: 1,
                       background: isUnread ? 'rgba(139,92,246,.13)' : 'rgba(139,92,246,.06)',
                       border: '1px solid ' + (isUnread ? 'rgba(139,92,246,.35)' : 'rgba(139,92,246,.15)'),
-                      borderLeft: isUnread ? '3px solid var(--purple)' : '3px solid rgba(139,92,246,.35)',
-                      borderRadius: '10px', padding: '.5rem .8rem', textAlign: 'left',
+                      borderRadius: '10px', padding: '.5rem .8rem .5rem 1rem', textAlign: 'left',
                       display: 'flex', alignItems: 'center', gap: '.6rem', color: 'var(--text-main)', cursor: 'pointer',
-                      position: 'relative', transition: 'all 0.2s'
+                      position: 'relative', overflow: 'hidden', transition: 'all 0.2s'
                     }}
                   >
+                    <div style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0, width: 2,
+                      background: isUnread ? 'var(--purple)' : 'rgba(139,92,246,.4)',
+                      borderRadius: '10px 0 0 10px',
+                    }} />
                     <div style={{
                       width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                       background: 'linear-gradient(135deg,var(--purple),var(--primary))',

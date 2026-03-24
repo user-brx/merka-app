@@ -139,13 +139,14 @@ body {
 .brand-icon {
   width: 26px;
   height: 26px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.28);
   border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, .25);
+  color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, .15);
 }
 
 .brand h1 {
@@ -809,8 +810,9 @@ textarea {
   border-color: rgba(239, 68, 68, .3);
 }
 
-/* Feed column — FIXED height so switching tabs doesn't resize */
 .feed-panel {
+  width: 100%;
+  box-sizing: border-box;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -819,16 +821,38 @@ textarea {
 }
 
 .feed-column {
+  width: 100%;
   flex: 1;
   min-height: 0;
   max-height: none;
-  overflow-y: auto;
+  overflow-y: scroll; /* sempre visível — evita shift de largura ao trocar abas */
   overflow-anchor: none;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: .85rem;
   padding-right: .4rem;
+  box-sizing: border-box;
+}
+
+.load-more-btn {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+  font-size: .8rem;
+  padding: .6rem;
+  border-radius: 10px;
+  margin-top: .25rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+}
+.load-more-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.07);
+  color: var(--text-main);
+  transform: none;
+  box-shadow: none;
 }
 
 .feed-empty {
@@ -2036,39 +2060,32 @@ textarea {
 /* Custom Scrollbar */
 .note-content::-webkit-scrollbar,
 .chat-messages::-webkit-scrollbar,
-.feed-column::-webkit-scrollbar {
+.feed-column::-webkit-scrollbar,
+.modal-list-scroll::-webkit-scrollbar {
   width: 3px;
 }
 
 .note-content::-webkit-scrollbar-track,
 .chat-messages::-webkit-scrollbar-track,
-.feed-column::-webkit-scrollbar-track {
+.feed-column::-webkit-scrollbar-track,
+.modal-list-scroll::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 10px;
 }
 
 .note-content::-webkit-scrollbar-thumb,
 .chat-messages::-webkit-scrollbar-thumb,
-.feed-column::-webkit-scrollbar-thumb {
+.feed-column::-webkit-scrollbar-thumb,
+.modal-list-scroll::-webkit-scrollbar-thumb {
   background: rgba(139, 92, 246, 0.3);
-  /* Decreased opacity */
   border-radius: 10px;
 }
 
 .note-content::-webkit-scrollbar-thumb:hover,
 .chat-messages::-webkit-scrollbar-thumb:hover,
-.feed-column::-webkit-scrollbar-thumb:hover {
+.feed-column::-webkit-scrollbar-thumb:hover,
+.modal-list-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.4);
-}
-
-.feed-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow-y: auto;
-  padding-right: 0.8rem;
-  padding-bottom: 5rem; /* space for FAB */
 }
 
 /* ── Main Layout with Sidebar ── */
@@ -2079,7 +2096,6 @@ textarea {
   margin-top: 0.35rem;
   flex: 1;
   min-height: 0;
-  /* Important for flex children scrolling */
   overflow: hidden;
 }
 
@@ -2091,15 +2107,6 @@ textarea {
   gap: 0.55rem;
   height: 100%;
   overflow: hidden;
-}
-
-.feed-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding-bottom: 0.4rem;
 }
 
 .app-aside {

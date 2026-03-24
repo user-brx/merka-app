@@ -8,7 +8,7 @@ import type { Translations } from '../../i18n/translations';
 import { ZapIcon, XIcon, LockIcon } from '../ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
-interface ChatMessage {
+export interface ChatMessage {
     id: string;
     fromMe: boolean;
     text: string;
@@ -20,12 +20,13 @@ interface ChatModalProps {
     myKeys: { sk: Uint8Array; pk: string; nsec: string; npub: string };
     targetPubkey: string;
     targetLabel: string;
+    cachedMessages?: ChatMessage[];
     onClose: () => void;
     onOpenZap?: (pubkey: string, npub: string, noteId?: string, lud16?: string) => void;
     onOpenProfile?: (pubkey: string, npub: string) => void;
 }
 
-export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpenZap, onOpenProfile }: ChatModalProps) {
+export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, cachedMessages, onClose, onOpenZap, onOpenProfile }: ChatModalProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
@@ -37,10 +38,14 @@ export function ChatPanel({ t, myKeys, targetPubkey, targetLabel, onClose, onOpe
     const dragProps = useDragToClose(onClose);
 
     useEffect(() => {
+        // Pre-populate from cache (messages received while chat was closed).
+        // This handles relays that forward kind:1059 in real-time but don't store them.
+        const initial = cachedMessages ?? [];
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setMessages([]);
+        setMessages(initial.length ? [...initial] : []);
         let cancelled = false;
-        const seen = new Set<string>();
+        // Pre-populate seen set so subscribeToConversation doesn't duplicate cached msgs
+        const seen = new Set<string>(initial.map(m => m.id));
 
         const handleEvent = (rumor: Rumor) => {
             if (cancelled) return; // ignore events from a stale subscription after cleanup

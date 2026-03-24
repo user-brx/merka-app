@@ -68,7 +68,17 @@ export function Feed({
   const searchAbortRef = useRef<(() => void) | null>(null);
   const feedColumnRef = useRef<HTMLDivElement>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const composeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const composeDragProps = useDragToClose(() => setComposeOpen(false));
+
+  // iOS Safari: focus after animation completes to avoid cursor misposition bug
+  useEffect(() => {
+    if (!composeOpen) return;
+    const timer = setTimeout(() => {
+      composeTextareaRef.current?.focus();
+    }, 260); // slightly after compose-slide-down (250ms)
+    return () => clearTimeout(timer);
+  }, [composeOpen]);
 
   useEffect(() => {
     localStorage.setItem('merka_search_tag', searchFilterTag);
@@ -265,14 +275,14 @@ export function Feed({
   };
 
   const parseMerkaContent = (content: string) => {
-    try { return JSON.parse(content); } catch {}
+    try { return JSON.parse(content); } catch { /* noop */ }
     const splitIdx = content.indexOf('\n\n---\n📦 Code:');
     if (splitIdx !== -1) {
-      try { return JSON.parse(content.substring(0, splitIdx)); } catch {}
+      try { return JSON.parse(content.substring(0, splitIdx)); } catch { /* noop */ }
     }
     const lastBraceIdx = content.lastIndexOf('}');
     if (lastBraceIdx !== -1) {
-      try { return JSON.parse(content.substring(0, lastBraceIdx + 1)); } catch {}
+      try { return JSON.parse(content.substring(0, lastBraceIdx + 1)); } catch { /* noop */ }
     }
     return null;
   };
@@ -358,7 +368,7 @@ export function Feed({
         </div>
 
         <div className="search-filters-group" style={{ position: 'relative', zIndex: 1100 }}>
-        <div className="search-bar-row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '.5rem' }}>
+        <div className="search-bar-row">
           <div className="search-input-wrap" style={{ flex: 1, minWidth: '150px' }}>
             <span className="search-icon"><SearchIcon size={14} /></span>
             <input
@@ -548,12 +558,12 @@ export function Feed({
           </div>
           <form className="post-form" onSubmit={handlePost}>
             <textarea
+              ref={composeTextareaRef}
               placeholder={t.whatsOnMind}
               value={newPost}
               onChange={e => setNewPost(e.target.value)}
               style={{ height: '96px', resize: 'none', fontSize: '16px' }}
               disabled={publishing}
-              autoFocus
             />
             <div className="post-form-footer">
               <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center', flexWrap: 'wrap' }}>

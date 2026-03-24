@@ -129,7 +129,7 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
 
     return (
         <div className="modal-overlay" style={{ zIndex: 50 }}>
-            <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '80dvh' }}>
+            <div className="modal-box" onClick={e => e.stopPropagation()} {...dragProps} style={{ maxWidth: 'min(420px, 100%)', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '86dvh' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem 1.2rem 0.6rem 1.2rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
                         <div className="modal-header-icon icon-network"><UsersIcon size={18} /></div>
@@ -213,7 +213,7 @@ export function NetworkListModal({ t, followedPks, onClose, myKeys, onFollow, on
                     </button>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.2rem 1.2rem 1.2rem', minHeight: '200px' }}>
+                <div className="modal-list-scroll" style={{ flex: 1, overflowY: 'auto', padding: '0 1.2rem 1.2rem 1.2rem', minHeight: '200px' }}>
                     {activeTab === 'followers' && loadingFollowers ? (
                         <p style={{ textAlign: 'center', opacity: .5, padding: '2rem 0' }}>{t.loading || 'Loading...'}</p>
                     ) : filteredDisplayPks.length === 0 ? (
@@ -272,12 +272,17 @@ function NetworkUserRow({ pk, t, isFollowed, hasKeys, onFollow, onUnfollow, onOp
                 onClick={() => setShowPopup(true)}
                 style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: 'rgba(255,255,255,0.04)', padding: '.65rem', borderRadius: '8px',
-                    cursor: 'pointer', transition: 'background 0.2s'
+                    background: 'rgba(255,255,255,0.04)', padding: '.65rem .65rem .65rem 1rem', borderRadius: '8px',
+                    cursor: 'pointer', transition: 'background 0.2s', position: 'relative', overflow: 'hidden'
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
             >
+                <div style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0, width: 2,
+                    background: isFollowed ? 'var(--primary)' : 'rgba(139,92,246,.35)',
+                    borderRadius: '8px 0 0 8px',
+                }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', overflow: 'hidden' }}>
                     <div style={{
                         width: 36, height: 36, borderRadius: '50%', flexShrink: 0,

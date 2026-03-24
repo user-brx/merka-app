@@ -10,7 +10,7 @@ import { MERKA_PUBKEY } from './config/constants';
 import { nip19 } from 'nostr-tools';
 import { translations, type LangCode } from './i18n/translations';
 import { type NostrEvent, AuthorProfile } from './components/feed/NoteCard';
-import { ChatPanel } from './components/chat/ChatPanel';
+import { ChatPanel, type ChatMessage } from './components/chat/ChatPanel';
 import { LoginScreen, type ProfileSetupData } from './pages/Login/Login';
 import { AboutNostr } from './components/modals/about/AboutNostr';
 import { AboutMerka } from './components/modals/about/AboutMerka';
@@ -128,6 +128,9 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
 
   // Ref so the DM listener always reads the latest timestamps without re-subscribing
   const lastReadTsRef = useRef<Record<string, number>>({});
+  // Cache of incoming DMs received while the chat was closed.
+  // Needed because some relays forward kind:1059 in real-time but do not store them.
+  const dmCacheRef = useRef<Map<string, ChatMessage[]>>(new Map());
 
   const [zapTarget, setZapTarget] = useState<{ pubkey: string, npub: string, noteId?: string, lud16?: string } | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -152,7 +155,7 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
   });
   useEffect(() => { lastReadTsRef.current = lastReadTimestamps; }, [lastReadTimestamps]);
 
-  const [discoverySince] = useState(() => Math.floor(Date.now() / 1000) - 86400); // Check last 24h
+  const [discoverySince] = useState(() => Math.floor(Date.now() / 1000) - 259200); // 3 dias — cobre randomização de até 48h do NIP-17
 
 
 
@@ -229,20 +232,26 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
 
 
   // Real-time DM Listener (Notifications)
+  // Reconnects on visibilitychange because iOS kills WebSockets when backgrounded
   useEffect(() => {
     if (!keys) return;
-    const unsub = subscribeToIncomingDMs(keys.sk, (ev) => {
-      // Ignore messages sent by me
-      if (ev.pubkey === keys.pk) return;
 
-      // Ignore if already read: message timestamp <= last time I opened this conversation
+    const handleDMEvent = (ev: { id: string; pubkey: string; content: string; created_at: number; tags: string[][] }) => {
+      if (ev.pubkey === keys.pk) return;
       const readAt = lastReadTsRef.current[ev.pubkey];
       if (readAt && ev.created_at <= readAt) return;
 
-      // Ignore if currently chatting with this person (they see messages in real-time)
+      // Cache message so ChatPanel can pre-populate when opened (relay may not store kind:1059)
+      const cached = dmCacheRef.current.get(ev.pubkey) ?? [];
+      if (!cached.some(m => m.id === ev.id)) {
+        dmCacheRef.current.set(
+          ev.pubkey,
+          [...cached, { id: ev.id, fromMe: false, text: ev.content, created_at: ev.created_at }].slice(-200)
+        );
+      }
+
       if (chatTargetRef.current?.pubkey === ev.pubkey) return;
 
-      // Mark as unread
       setUnreadPks(prev => {
         if (prev.has(ev.pubkey)) return prev;
         const next = new Set(prev);
@@ -251,19 +260,60 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
         return next;
       });
 
-      // Auto-add to contacts
       setChatContacts(prev => {
-        if (prev.some(c => c.pubkey === ev.pubkey)) return prev;
+        const existing = prev.find(c => c.pubkey === ev.pubkey);
         const npub = nip19.npubEncode(ev.pubkey);
-        const label = npub.slice(0, 12) + '...';
-        const next = [...prev, { pubkey: ev.pubkey, npub, label }];
-        localStorage.setItem('merka_contacts', JSON.stringify(next));
-        return next;
+        if (!existing) {
+          // Novo contato: adicionar com label provisório e buscar perfil
+          const label = npub.slice(0, 12) + '...';
+          const next = [...prev, { pubkey: ev.pubkey, npub, label }];
+          localStorage.setItem('merka_contacts', JSON.stringify(next));
+          // Buscar nome real do remetente em background
+          fetchProfile(ev.pubkey, (p: Record<string, string>) => {
+            const name = p?.display_name || p?.name;
+            if (!name) return;
+            setChatContacts(c => {
+              const updated = c.map(x => x.pubkey === ev.pubkey ? { ...x, label: name } : x);
+              localStorage.setItem('merka_contacts', JSON.stringify(updated));
+              return updated;
+            });
+          });
+          return next;
+        } else if (existing.label.endsWith('...') && existing.label.length <= 15) {
+          // Contato existente mas ainda sem nome real — tentar buscar
+          fetchProfile(ev.pubkey, (p: Record<string, string>) => {
+            const name = p?.display_name || p?.name;
+            if (!name) return;
+            setChatContacts(c => {
+              const updated = c.map(x => x.pubkey === ev.pubkey ? { ...x, label: name } : x);
+              localStorage.setItem('merka_contacts', JSON.stringify(updated));
+              return updated;
+            });
+          });
+          return prev;
+        }
+        return prev;
       });
 
       showGlobalToast(t.newMsgReceived || "Nova mensagem recebida!");
-    }, discoverySince);
-    return () => unsub();
+    };
+
+    let unsub = subscribeToIncomingDMs(keys.sk, handleDMEvent, discoverySince);
+
+    // iOS Safari / Capacitor: WebSocket is killed when app is backgrounded.
+    // Re-subscribe when app returns to foreground, fetching the last 5 min to catch missed msgs.
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      unsub();
+      const since3days = Math.floor(Date.now() / 1000) - 259200;
+      unsub = subscribeToIncomingDMs(keys.sk, handleDMEvent, since3days);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      unsub();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [keys, t.newMsgReceived, showGlobalToast, discoverySince]);
 
   // Clear unread when opening chat
@@ -355,6 +405,12 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
     document.cookie.split(';').forEach(c => {
       document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
     });
+
+    // Limpa cache em memória de DMs (impede que próximo usuário veja msgs do anterior)
+    dmCacheRef.current.clear();
+
+    // Fecha o painel de chat se estiver aberto
+    setChatTarget(null);
 
     // Reset UI state
     setMyProfile({});
@@ -668,6 +724,7 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
                 myKeys={keys}
                 targetPubkey={chatTarget.pubkey}
                 targetLabel={chatTarget.label}
+                cachedMessages={dmCacheRef.current.get(chatTarget.pubkey)}
                 onClose={() => setChatTarget(null)}
                 onOpenZap={(pk, npub, noteId, lud16) => setZapTarget({ pubkey: pk, npub, noteId, lud16 })}
                 onOpenProfile={(pk, npub) => setProfilePopupTarget({ pubkey: pk, npub })}
