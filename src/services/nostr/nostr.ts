@@ -3,12 +3,14 @@ import type { NostrEvent, Filter } from 'nostr-tools';
 import { APP_GUID } from '../../config/constants';
 import { pool, now } from './pool';
 import { RELAYS } from './relayHealth';
+import type { DisputeOutcome } from './reputation';
 
 export * from './pool';
 export * from './auth';
 export * from './relayHealth';
 export * from './messaging';
 export * from './zap';
+export * from './reputation';
 
 export async function publishNote(sk: Uint8Array, content: string, tags: string[][] = []) {
   const event = finalizeEvent({ kind: 1, created_at: now(), tags, content }, sk);
@@ -51,6 +53,34 @@ export async function publishReaction(
   }, sk);
   try { await Promise.any(pool.publish(RELAYS, event)); return true; }
   catch { console.error("publishReaction failed"); return false; }
+}
+
+/**
+ * Publica uma resolução de disputa como kind-1 com tags merka-dispute.
+ * Chamado pelo árbitro ao encerrar uma disputa de escrow multisig.
+ * O evento fica público no Nostr e é contado em fetchReputation().
+ */
+export async function publishDisputeResolution(
+  sk: Uint8Array,
+  options: {
+    outcome: DisputeOutcome;
+    content: string;
+    valueSats?: number;
+    category?: string;
+  }
+) {
+  const tags: string[][] = [
+    ['t', 'merka-escrow'],
+    ['t', 'merka-dispute'],
+    ['merka-role', 'arbiter'],
+    ['merka-outcome', options.outcome],
+  ];
+  if (options.valueSats !== undefined) tags.push(['merka-value', String(options.valueSats)]);
+  if (options.category) tags.push(['merka-category', options.category]);
+
+  const event = finalizeEvent({ kind: 1, created_at: now(), tags, content: options.content }, sk);
+  try { await Promise.any(pool.publish(RELAYS, event)); return true; }
+  catch { console.error('publishDisputeResolution failed'); return false; }
 }
 
 export async function publishFollowList(sk: Uint8Array, followedPubkeys: string[]) {
