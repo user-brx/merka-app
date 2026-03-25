@@ -1,3 +1,4 @@
+import type { NostrEvent } from 'nostr-tools';
 import { pool } from './pool';
 import { RELAYS } from './relayHealth';
 
@@ -55,9 +56,32 @@ function countEvents(filter: object, timeoutMs: number): Promise<number> {
   });
 }
 
+/** Conta seguidores únicos (deduplicado por pubkey, igual ao fetchFollowers) */
+function countUniqueFollowers(pubkey: string, timeoutMs: number): Promise<number> {
+  return new Promise<number>((resolve) => {
+    const seen = new Set<string>();
+    let resolved = false;
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      try { sub.close(); } catch { /* ignore */ }
+      resolve(seen.size);
+    };
+    const sub = pool.subscribeMany(
+      RELAYS,
+      { kinds: [3], '#p': [pubkey], limit: 500 },
+      {
+        onevent(ev: NostrEvent) { seen.add(ev.pubkey); },
+        oneose: finish,
+      }
+    );
+    setTimeout(finish, timeoutMs);
+  });
+}
+
 async function doFetchReputation(pubkey: string): Promise<ReputationData> {
   const [followers, following, zapCount, reactionCount, disputeCount] = await Promise.all([
-    countEvents({ kinds: [3], '#p': [pubkey], limit: 500 }, 8000),
+    countUniqueFollowers(pubkey, 8000),
     countEvents({ kinds: [3], authors: [pubkey], limit: 1 }, 6000).then(() => {
       // following: fetch actual follow list count
       return new Promise<number>((resolve) => {

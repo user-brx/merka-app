@@ -215,7 +215,7 @@ describe('fetchReputation — cache', () => {
             } else if (f.kinds?.includes(3) && f.authors) {
                 handlers.onevent({ tags: [['p', 'x1'], ['p', 'x2'], ['p', 'x3']] });
             } else if (f.kinds?.includes(3)) {
-                for (let i = 0; i < 25; i++) handlers.onevent({ tags: [] });
+                for (let i = 0; i < 25; i++) handlers.onevent({ pubkey: `follower-${i}`, tags: [] });
             } else if (f.kinds?.includes(9735)) {
                 for (let i = 0; i < 5; i++) handlers.onevent({ tags: [] });
             } else if (f.kinds?.includes(7)) {

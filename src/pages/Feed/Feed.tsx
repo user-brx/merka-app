@@ -11,7 +11,7 @@ import {
   fetchNotesBatch
 } from '../../services/nostr/nostr';
 import { APP_GUID, MERKA_PUBKEY, GITHUB_REPO, GITHUB_PAGES, MERKA_NPUB } from '../../config/constants';
-import { SearchIcon, PlusIcon, XIcon } from '../../components/ui/icons';
+import { SearchIcon, PlusIcon, XIcon, RefreshCwIcon, GlobeIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
 export interface FeedProps {
@@ -70,6 +70,11 @@ export function Feed({
   const [composeOpen, setComposeOpen] = useState(false);
   const composeTextareaRef = useRef<HTMLTextAreaElement>(null);
   const composeDragProps = useDragToClose(() => setComposeOpen(false));
+
+  // Pull to refresh state
+  const [pullStartY, setPullStartY] = useState<number | null>(null);
+  const [pullMoveY, setPullMoveY] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // iOS Safari: focus after animation completes to avoid cursor misposition bug
   useEffect(() => {
@@ -266,6 +271,51 @@ export function Feed({
     });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (feedColumnRef.current && feedColumnRef.current.scrollTop === 0) {
+      setPullStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY !== null && feedColumnRef.current && feedColumnRef.current.scrollTop === 0) {
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - pullStartY;
+      if (diff > 0) {
+        setPullMoveY(Math.min(diff, 60)); // max pull distance
+        if (e.cancelable) e.preventDefault();
+      } else {
+        setPullStartY(null);
+        setPullMoveY(0);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (pullMoveY >= 50 && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullStartY(null);
+      setPullMoveY(0); // spring back immediately; indicator stays via isRefreshing
+      const windowStart = Math.floor(Date.now() / 1000) - 86400;
+      const until = Math.floor(Date.now() / 1000);
+      fetchNotesBatch({
+        since: windowStart,
+        until,
+        onEvent: (ev: NostrEvent) => {
+          if (!hasMerkaTag(ev)) return;
+          setGlobalNotes(prev => {
+            if (prev.some(n => n.id === ev.id)) return prev;
+            return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
+          });
+        },
+        onDone: () => setIsRefreshing(false)
+      });
+    } else {
+      setPullStartY(null);
+      setPullMoveY(0);
+    }
+  };
+
   const formatTime = (ts: number) => {
     const d = new Date(ts * 1000);
     const now = new Date();
@@ -361,7 +411,7 @@ export function Feed({
                 onClick={() => setActiveTab(tab)}
                 title={tab === 'merka' ? t.hintMerka : tab === 'following' ? t.hintFollowing : t.hintMine}
               >
-                {tab === 'merka' ? '🌍 Merka' : tab === 'following' ? '👥 ' + t.followingFeed : '👤 ' + t.myFeed}
+                {tab === 'merka' ? <><GlobeIcon size={13} /> Merka</> : tab === 'following' ? '👥 ' + t.followingFeed : '👤 ' + t.myFeed}
               </button>
             ))}
           </div>
@@ -441,19 +491,43 @@ export function Feed({
               onClick={() => setSearchFilterType(prev => prev === 'sell' ? 'all' : 'sell')}
               style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterType === 'sell' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterType === 'sell' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)' }}
             >{t.sell}</button>
-            {activeTab !== 'mine' && (
-              <button
-                className="filter-chip"
-                onClick={() => setSearchFilterLang(prev => prev === 'all' ? 'current' : 'all')}
-                style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterLang === 'current' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterLang === 'current' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                {searchFilterLang === 'all' ? t.langAll : <>{t.langCurrent}: {lang.toUpperCase()}</>}
-              </button>
-            )}</div>
+            <button
+              className="filter-chip"
+              onClick={() => setSearchFilterLang(prev => prev === 'all' ? 'current' : 'all')}
+              style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterLang === 'current' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterLang === 'current' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              {searchFilterLang === 'all' ? t.langAll : <>{t.langCurrent}: {lang.toUpperCase()}</>}
+            </button></div>
         </div>
         </div>
 
-        <div className="feed-column" ref={feedColumnRef}>
+        {/* Pull-to-refresh indicator — sits above feed-column, collapses to 0 when idle */}
+        <div
+          className="pull-refresh-bar"
+          style={
+            isRefreshing
+              ? { height: '44px', opacity: 1 }
+              : { height: `${Math.min(pullMoveY, 44)}px`, opacity: Math.min(pullMoveY / 40, 1) }
+          }
+          aria-hidden="true"
+        >
+          <div className={`pull-refresh-icon${isRefreshing ? ' spinning' : ''}`}>
+            <RefreshCwIcon size={20} />
+          </div>
+        </div>
+
+        <div
+          className="feed-column"
+          ref={feedColumnRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={
+            pullMoveY > 0
+              ? { transform: `translateY(${pullMoveY}px)`, transition: 'none' }
+              : { transform: 'translateY(0)', transition: 'transform 0.3s ease' }
+          }
+        >
           {searchQuery.trim() ? (
             (() => {
               const allLoaded = [...new Map([

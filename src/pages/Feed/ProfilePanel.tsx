@@ -95,6 +95,35 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast, onLogout }: 
                 {npubCopied ? <span style={{ fontSize: '.65rem', color: 'var(--success)' }}>{t.copied}</span> : <CopyIcon />}
               </button>
             </div>
+            {reputation && (
+              <div className="reputation-pills" style={{ marginTop: '.3rem' }}>
+                {reputation.nip05 && (
+                  <span className="about-client-pill rep-pill--verified" title={t.repNip05Badge || 'Verified NIP-05'}>
+                    <ShieldCheckIcon size={11} /> {t.repTierVerified || 'Verified'}
+                  </span>
+                )}
+                {reputation.followers > 0 && (
+                  <span className="about-client-pill">
+                    <UsersIcon size={11} /> {reputation.followers} {t.repFollowers || 'followers'}
+                  </span>
+                )}
+                {reputation.zapCount > 0 && (
+                  <span className="about-client-pill">
+                    <ZapIcon size={11} /> {reputation.zapCount} {t.repZapsReceived || 'zaps'}
+                  </span>
+                )}
+                {reputation.reactionCount > 0 && (
+                  <span className="about-client-pill">
+                    <StarIcon size={11} /> {reputation.reactionCount} {t.repReactions || 'reactions'}
+                  </span>
+                )}
+                {reputation.disputeCount > 0 && (
+                  <span className="about-client-pill rep-pill--arbiter" title={t.repDisputesResolved || 'disputes resolved'}>
+                    <ScaleIcon size={11} /> {reputation.disputeCount} {t.repDisputesResolved || 'disputes resolved'}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           {!editing && (
             <button className="btn-icon" onClick={onClose} style={{ padding: '.4rem .7rem' }}><XIcon /></button>
@@ -130,58 +159,6 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast, onLogout }: 
             <div className="fields-divider" />
             {field(t.bio, 'about', t.bioPlaceholder || 'A brief description about yourself...')}
           </div>
-        </div>
-
-        {/* Reputation section */}
-        <div className="profile-reputation-section">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.75rem' }}>
-            {reputation?.tier === 'trusted' || reputation?.tier === 'verified'
-              ? <ShieldCheckIcon size={16} />
-              : <StarIcon size={16} />
-            }
-            <span style={{ fontWeight: 600, fontSize: '.9rem' }}>
-              {reputation
-                ? (reputation.tier === 'trusted' ? (t.repTierTrusted || 'Trusted')
-                  : reputation.tier === 'verified' ? (t.repTierVerified || 'Verified')
-                  : reputation.tier === 'active' ? (t.repTierActive || 'Active')
-                  : (t.repTierNew || 'New'))
-                : '…'
-              }
-            </span>
-          </div>
-          {reputation ? (
-            <div className="rep-stats-grid">
-              <div className="rep-stat-item">
-                <UsersIcon size={14} />
-                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.followers}</span>
-                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repFollowers || 'followers'}</span>
-              </div>
-              <div className="rep-stat-item">
-                <UsersIcon size={14} />
-                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.following}</span>
-                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.following || 'following'}</span>
-              </div>
-              <div className="rep-stat-item">
-                <ZapIcon size={14} />
-                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.zapCount}</span>
-                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repZapsReceived || 'zaps'}</span>
-              </div>
-              <div className="rep-stat-item">
-                <StarIcon size={14} />
-                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.reactionCount}</span>
-                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repReactions || 'reactions'}</span>
-              </div>
-              {reputation.disputeCount > 0 && (
-                <div className="rep-stat-item">
-                  <ScaleIcon size={14} />
-                  <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.disputeCount}</span>
-                  <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repDisputesResolved || 'disputes'}</span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="rep-loading-bar" />
-          )}
         </div>
 
         <div className="modal-actions profile-modal-actions">
