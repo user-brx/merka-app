@@ -19,6 +19,10 @@ vi.mock('../../services/nostr/nostr', () => ({
     subscribeToReactions: mockSubscribeToReactions,
     fetchProfile: mockFetchProfile,
     subscribeRelayStatus: mockSubscribeRelayStatus,
+    fetchReputation: vi.fn(() => Promise.resolve({
+        followers: 0, following: 0, nip05: false, lud16: false,
+        zapCount: 0, reactionCount: 0, tier: 'new', fetchedAt: Date.now(),
+    })),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────

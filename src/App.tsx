@@ -123,6 +123,11 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
   const [chatTarget, setChatTarget] = useState<ChatContact | null>(null);
   const chatTargetRef = useRef<ChatContact | null>(null);
   useEffect(() => { chatTargetRef.current = chatTarget; }, [chatTarget]);
+  const [chatInitialMessages, setChatInitialMessages] = useState<ChatMessage[] | undefined>(undefined);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setChatInitialMessages(chatTarget ? dmCacheRef.current.get(chatTarget.pubkey) : undefined);
+  }, [chatTarget]);
 
 
 
@@ -724,7 +729,7 @@ const [showRelayPanel, setShowRelayPanel] = useState(false);
                 myKeys={keys}
                 targetPubkey={chatTarget.pubkey}
                 targetLabel={chatTarget.label}
-                cachedMessages={dmCacheRef.current.get(chatTarget.pubkey)}
+                cachedMessages={chatInitialMessages}
                 onClose={() => setChatTarget(null)}
                 onOpenZap={(pk, npub, noteId, lud16) => setZapTarget({ pubkey: pk, npub, noteId, lud16 })}
                 onOpenProfile={(pk, npub) => setProfilePopupTarget({ pubkey: pk, npub })}
