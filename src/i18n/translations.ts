@@ -65,6 +65,11 @@ export interface Translations {
     protectKeyMismatch?: string; protectKeyTooShort?: string;
     unlockTitle?: string; unlockDesc?: string;
     unlockBtn?: string; unlockError?: string; unlockUseOtherKey?: string;
+    // Reputation
+    repTierNew?: string; repTierActive?: string; repTierVerified?: string; repTierTrusted?: string;
+    repFollowers?: string; repZapsReceived?: string; repReactions?: string;
+    repNip05Badge?: string; repLightning?: string; repTooltip?: string;
+    repDisputesResolved?: string;
 }
 
 const t = (x: Translations) => x;
@@ -171,6 +176,10 @@ export const translations: Record<LangCode, Translations> = {
         unlockTitle: 'Unlock Account', unlockDesc: 'Enter your password to access the saved account.',
         unlockBtn: 'Unlock', unlockError: 'Wrong password. Try again.',
         unlockUseOtherKey: 'Use another key',
+        repTierNew: 'New', repTierActive: 'Active', repTierVerified: 'Verified', repTierTrusted: 'Trusted',
+        repFollowers: 'followers', repZapsReceived: 'zaps', repReactions: 'reactions',
+        repNip05Badge: 'Verified identity (NIP-05)', repLightning: 'Accepts Lightning', repTooltip: 'Reputation based on Nostr activity',
+        repDisputesResolved: 'disputes resolved',
     }),
     pt: t({
         title: 'Merka', subtitle: 'Mercado Descentralizado',
@@ -273,6 +282,10 @@ export const translations: Record<LangCode, Translations> = {
         unlockTitle: 'Desbloquear Conta', unlockDesc: 'Digite sua senha para acessar a conta salva.',
         unlockBtn: 'Desbloquear', unlockError: 'Senha incorreta. Tente novamente.',
         unlockUseOtherKey: 'Usar outra chave',
+        repTierNew: 'Novo', repTierActive: 'Ativo', repTierVerified: 'Verificado', repTierTrusted: 'Confiável',
+        repFollowers: 'seguidores', repZapsReceived: 'zaps', repReactions: 'reações',
+        repNip05Badge: 'Identidade verificada (NIP-05)', repLightning: 'Aceita Lightning', repTooltip: 'Reputação baseada em atividade Nostr',
+        repDisputesResolved: 'disputas resolvidas',
     }),
     es: t({
         title: 'Merka', subtitle: 'Mercado Descentralizado',
@@ -373,6 +386,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Las contraseñas no coinciden.', protectKeyTooShort: 'Mínimo 6 caracteres.',
         unlockTitle: 'Desbloquear Cuenta', unlockDesc: 'Ingresa tu contraseña para acceder a la cuenta guardada.',
         unlockBtn: 'Desbloquear', unlockError: 'Contraseña incorrecta. Inténtalo de nuevo.', unlockUseOtherKey: 'Usar otra clave',
+        repTierNew: 'Nuevo', repTierActive: 'Activo', repTierVerified: 'Verificado', repTierTrusted: 'De confianza',
+        repFollowers: 'seguidores', repZapsReceived: 'zaps', repReactions: 'reacciones',
+        repNip05Badge: 'Identidad verificada (NIP-05)', repLightning: 'Acepta Lightning', repTooltip: 'Reputación basada en actividad Nostr',
+        repDisputesResolved: 'disputas resueltas',
     }),
     it: t({
         title: 'Merka', subtitle: 'Mercato Decentralizzato',
@@ -470,6 +487,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Le password non corrispondono.', protectKeyTooShort: 'Minimo 6 caratteri.',
         unlockTitle: 'Sblocca Account', unlockDesc: "Inserisci la tua password per accedere all'account salvato.",
         unlockBtn: 'Sblocca', unlockError: 'Password errata. Riprova.', unlockUseOtherKey: "Usa un'altra chiave",
+        repTierNew: 'Nuovo', repTierActive: 'Attivo', repTierVerified: 'Verificato', repTierTrusted: 'Affidabile',
+        repFollowers: 'follower', repZapsReceived: 'zap', repReactions: 'reazioni',
+        repNip05Badge: 'Identità verificata (NIP-05)', repLightning: 'Accetta Lightning', repTooltip: 'Reputazione basata sull\'attività Nostr',
+        repDisputesResolved: 'dispute risolte',
     }),
     de: t({
         title: 'Merka', subtitle: 'Dezentraler Marktplatz',
@@ -567,6 +588,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Passwörter stimmen nicht überein.', protectKeyTooShort: 'Mindestens 6 Zeichen.',
         unlockTitle: 'Konto entsperren', unlockDesc: 'Gib dein Passwort ein, um auf das gespeicherte Konto zuzugreifen.',
         unlockBtn: 'Entsperren', unlockError: 'Falsches Passwort. Versuche es erneut.', unlockUseOtherKey: 'Anderen Schlüssel verwenden',
+        repTierNew: 'Neu', repTierActive: 'Aktiv', repTierVerified: 'Verifiziert', repTierTrusted: 'Vertrauenswürdig',
+        repFollowers: 'Follower', repZapsReceived: 'Zaps', repReactions: 'Reaktionen',
+        repNip05Badge: 'Verifizierte Identität (NIP-05)', repLightning: 'Akzeptiert Lightning', repTooltip: 'Reputation basierend auf Nostr-Aktivität',
+        repDisputesResolved: 'Streitigkeiten gelöst',
     }),
     hi: t({
         title: 'Merka', subtitle: 'विकेंद्रीकृत बाज़ार',
@@ -665,6 +690,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'पासवर्ड मेल नहीं खाते।', protectKeyTooShort: 'कम से कम 6 अक्षर।',
         unlockTitle: 'खाता अनलॉक करें', unlockDesc: 'सहेजे गए खाते तक पहुंचने के लिए पासवर्ड दर्ज करें।',
         unlockBtn: 'अनलॉक करें', unlockError: 'गलत पासवर्ड। पुनः प्रयास करें।', unlockUseOtherKey: 'दूसरी कुंजी उपयोग करें',
+        repTierNew: 'नया', repTierActive: 'सक्रिय', repTierVerified: 'सत्यापित', repTierTrusted: 'विश्वसनीय',
+        repFollowers: 'फ़ॉलोअर', repZapsReceived: 'ज़ैप', repReactions: 'प्रतिक्रियाएं',
+        repNip05Badge: 'सत्यापित पहचान (NIP-05)', repLightning: 'Lightning स्वीकार करता है', repTooltip: 'Nostr गतिविधि पर आधारित प्रतिष्ठा',
+        repDisputesResolved: 'विवाद सुलझाए',
     }),
     ja: t({
         title: 'Merka', subtitle: '分散型マーケットプレイス',
@@ -762,6 +791,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'パスワードが一致しません。', protectKeyTooShort: '最低6文字必要です。',
         unlockTitle: 'アカウントのロックを解除', unlockDesc: '保存されたアカウントにアクセスするためパスワードを入力してください。',
         unlockBtn: 'ロック解除', unlockError: 'パスワードが違います。再試行してください。', unlockUseOtherKey: '別の鍵を使用',
+        repTierNew: '新規', repTierActive: 'アクティブ', repTierVerified: '認証済み', repTierTrusted: '信頼済み',
+        repFollowers: 'フォロワー', repZapsReceived: 'ザップ', repReactions: 'リアクション',
+        repNip05Badge: '本人確認済み (NIP-05)', repLightning: 'Lightning対応', repTooltip: 'Nostrアクティビティに基づく評判',
+        repDisputesResolved: '解決済み紛争',
     }),
     zh: t({
         title: 'Merka', subtitle: '去中心化市场',
@@ -859,6 +892,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: '密码不匹配。', protectKeyTooShort: '最少6个字符。',
         unlockTitle: '解锁账户', unlockDesc: '输入密码以访问已保存的账户。',
         unlockBtn: '解锁', unlockError: '密码错误，请重试。', unlockUseOtherKey: '使用其他密钥',
+        repTierNew: '新用户', repTierActive: '活跃', repTierVerified: '已认证', repTierTrusted: '可信',
+        repFollowers: '关注者', repZapsReceived: 'Zap', repReactions: '反应',
+        repNip05Badge: '已验证身份 (NIP-05)', repLightning: '接受闪电网络', repTooltip: '基于Nostr活动的声誉',
+        repDisputesResolved: '已解决纠纷',
     }),
     ar: t({
         title: 'Merka', subtitle: 'سوق لامركزي',
@@ -959,6 +996,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'كلمتا المرور غير متطابقتين.', protectKeyTooShort: 'الحد الأدنى 6 أحرف.',
         unlockTitle: 'فتح الحساب', unlockDesc: 'أدخل كلمة مرورك للوصول إلى الحساب المحفوظ.',
         unlockBtn: 'فتح', unlockError: 'كلمة مرور خاطئة. حاول مرة أخرى.', unlockUseOtherKey: 'استخدام مفتاح آخر',
+        repTierNew: 'جديد', repTierActive: 'نشط', repTierVerified: 'تم التحقق', repTierTrusted: 'موثوق',
+        repFollowers: 'متابعون', repZapsReceived: 'زاب', repReactions: 'ردود الفعل',
+        repNip05Badge: 'هوية موثقة (NIP-05)', repLightning: 'يقبل Lightning', repTooltip: 'السمعة بناءً على نشاط Nostr',
+        repDisputesResolved: 'نزاعات محلولة',
     }),
     ru: t({
         title: 'Merka', subtitle: 'Децентрализованный рынок',
@@ -1056,6 +1097,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Пароли не совпадают.', protectKeyTooShort: 'Минимум 6 символов.',
         unlockTitle: 'Разблокировать аккаунт', unlockDesc: 'Введите пароль для доступа к сохранённому аккаунту.',
         unlockBtn: 'Разблокировать', unlockError: 'Неверный пароль. Попробуйте снова.', unlockUseOtherKey: 'Использовать другой ключ',
+        repTierNew: 'Новый', repTierActive: 'Активный', repTierVerified: 'Проверен', repTierTrusted: 'Доверенный',
+        repFollowers: 'подписчики', repZapsReceived: 'запы', repReactions: 'реакции',
+        repNip05Badge: 'Подтверждённая личность (NIP-05)', repLightning: 'Принимает Lightning', repTooltip: 'Репутация на основе активности Nostr',
+        repDisputesResolved: 'споров разрешено',
     }),
     fr: t({
         title: 'Merka', subtitle: 'Marché Décentralisé',
@@ -1153,6 +1198,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Les mots de passe ne correspondent pas.', protectKeyTooShort: 'Minimum 6 caractères.',
         unlockTitle: 'Déverrouiller le compte', unlockDesc: 'Entrez votre mot de passe pour accéder au compte enregistré.',
         unlockBtn: 'Déverrouiller', unlockError: 'Mot de passe incorrect. Réessayez.', unlockUseOtherKey: 'Utiliser une autre clé',
+        repTierNew: 'Nouveau', repTierActive: 'Actif', repTierVerified: 'Vérifié', repTierTrusted: 'De confiance',
+        repFollowers: 'abonnés', repZapsReceived: 'zaps', repReactions: 'réactions',
+        repNip05Badge: 'Identité vérifiée (NIP-05)', repLightning: 'Accepte Lightning', repTooltip: 'Réputation basée sur l\'activité Nostr',
+        repDisputesResolved: 'litiges résolus',
     }),
     tr: t({
         title: 'Merka', subtitle: 'Merkeziyetsiz Pazar Yeri',
@@ -1250,6 +1299,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Şifreler eşleşmiyor.', protectKeyTooShort: 'En az 6 karakter.',
         unlockTitle: 'Hesabı Kilidi Aç', unlockDesc: 'Kayıtlı hesaba erişmek için şifreni gir.',
         unlockBtn: 'Kilidi Aç', unlockError: 'Yanlış şifre. Tekrar dene.', unlockUseOtherKey: 'Başka anahtar kullan',
+        repTierNew: 'Yeni', repTierActive: 'Aktif', repTierVerified: 'Doğrulandı', repTierTrusted: 'Güvenilir',
+        repFollowers: 'takipçi', repZapsReceived: 'zap', repReactions: 'tepkiler',
+        repNip05Badge: 'Doğrulanmış kimlik (NIP-05)', repLightning: "Lightning'i kabul eder", repTooltip: 'Nostr aktivitesine dayalı itibar',
+        repDisputesResolved: 'çözülen anlaşmazlık',
     }),
     fa: t({
         title: 'مركا', subtitle: 'بازار غیرمتمرکز',
@@ -1349,6 +1402,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'رمزهای عبور مطابقت ندارند.', protectKeyTooShort: 'حداقل ۶ کاراکتر.',
         unlockTitle: 'باز کردن حساب', unlockDesc: 'رمز عبور خود را برای دسترسی به حساب ذخیره‌شده وارد کنید.',
         unlockBtn: 'باز کردن', unlockError: 'رمز عبور اشتباه است. دوباره امتحان کنید.', unlockUseOtherKey: 'استفاده از کلید دیگر',
+        repTierNew: 'جدید', repTierActive: 'فعال', repTierVerified: 'تأیید شده', repTierTrusted: 'قابل اعتماد',
+        repFollowers: 'دنبال‌کننده', repZapsReceived: 'زپ', repReactions: 'واکنش‌ها',
+        repNip05Badge: 'هویت تأیید شده (NIP-05)', repLightning: 'Lightning را می‌پذیرد', repTooltip: 'شهرت بر اساس فعالیت Nostr',
+        repDisputesResolved: 'اختلافات حل‌شده',
     }),
     vi: t({
         title: 'Merka', subtitle: 'Thị trường phi tập trung',
@@ -1448,6 +1505,10 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Mật khẩu không khớp.', protectKeyTooShort: 'Tối thiểu 6 ký tự.',
         unlockTitle: 'Mở khóa Tài khoản', unlockDesc: 'Nhập mật khẩu để truy cập tài khoản đã lưu.',
         unlockBtn: 'Mở khóa', unlockError: 'Mật khẩu sai. Thử lại.', unlockUseOtherKey: 'Dùng khóa khác',
+        repTierNew: 'Mới', repTierActive: 'Hoạt động', repTierVerified: 'Đã xác minh', repTierTrusted: 'Đáng tin cậy',
+        repFollowers: 'người theo dõi', repZapsReceived: 'zap', repReactions: 'phản ứng',
+        repNip05Badge: 'Danh tính đã xác minh (NIP-05)', repLightning: 'Chấp nhận Lightning', repTooltip: 'Uy tín dựa trên hoạt động Nostr',
+        repDisputesResolved: 'tranh chấp đã giải quyết',
     }),
     uk: t({
         title: 'Merka', subtitle: 'Децентралізований Ринок',
@@ -1547,5 +1608,9 @@ export const translations: Record<LangCode, Translations> = {
         protectKeyMismatch: 'Паролі не збігаються.', protectKeyTooShort: 'Мінімум 6 символів.',
         unlockTitle: 'Розблокувати акаунт', unlockDesc: 'Введіть пароль для доступу до збереженого акаунту.',
         unlockBtn: 'Розблокувати', unlockError: 'Невірний пароль. Спробуйте ще раз.', unlockUseOtherKey: 'Використати інший ключ',
+        repTierNew: 'Новий', repTierActive: 'Активний', repTierVerified: 'Перевірений', repTierTrusted: 'Надійний',
+        repFollowers: 'підписники', repZapsReceived: 'запи', repReactions: 'реакції',
+        repNip05Badge: 'Підтверджена особа (NIP-05)', repLightning: 'Приймає Lightning', repTooltip: 'Репутація на основі активності Nostr',
+        repDisputesResolved: 'спорів вирішено',
     }),
 };
