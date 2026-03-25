@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { nip19 } from 'nostr-tools';
-import { subscribeToReactions, fetchProfile } from '../../services/nostr/nostr';
+import { subscribeToReactions, fetchProfile, fetchReputation } from '../../services/nostr/nostr';
+import type { ReputationData, TrustTier } from '../../services/nostr/reputation';
 import type { Translations } from '../../i18n/translations';
-import { ChatHistoryIcon, CopyIcon, ZapIcon, ExternalLinkIcon, HeartIcon, UserPlusIcon, UserMinusIcon, XIcon, GlobeIcon } from '../ui/icons';
+import { ChatHistoryIcon, CopyIcon, ZapIcon, ExternalLinkIcon, HeartIcon, UserPlusIcon, UserMinusIcon, XIcon, GlobeIcon, ShieldCheckIcon, StarIcon, UsersIcon, ScaleIcon } from '../ui/icons';
 
 export interface NostrEvent {
     id: string;
@@ -17,6 +18,45 @@ export interface NostrEvent {
 const safeUrl = (url?: string): string | null =>
     url?.match(/^https?:\/\//) ? url : null;
 
+
+// ── Reputation helpers ───────────────────────────────────────────────────────
+
+/** Derive a lightweight tier from profile kind-0 data already in memory (zero extra fetch). */
+function computeTierFromProfile(profile: Record<string, string>): TrustTier {
+    const nip05 = !!(profile.nip05 && profile.nip05.includes('@'));
+    if (nip05) return 'verified';
+    if (profile.lud16) return 'active';
+    return 'new';
+}
+
+interface ReputationBadgeProps {
+    tier: TrustTier;
+    t: Translations;
+}
+
+function ReputationBadge({ tier, t }: ReputationBadgeProps) {
+    if (tier === 'new') return null;
+    if (tier === 'trusted') {
+        return (
+            <span className="rep-badge rep-badge--trusted" title={t.repTierTrusted || 'Trusted'} aria-label={t.repTierTrusted || 'Trusted'}>
+                <ShieldCheckIcon size={12} />
+            </span>
+        );
+    }
+    if (tier === 'verified') {
+        return (
+            <span className="rep-badge rep-badge--verified" title={t.repTierVerified || 'Verified'} aria-label={t.repTierVerified || 'Verified'}>
+                <ShieldCheckIcon size={12} />
+            </span>
+        );
+    }
+    // active
+    return (
+        <span className="rep-badge rep-badge--active" title={t.repTierActive || 'Active'} aria-label={t.repTierActive || 'Active'}>
+            <StarIcon size={12} />
+        </span>
+    );
+}
 
 // ── Author Profile mini-popup ────────────────────────────────────────────────
 export interface AuthorProfileProps {
@@ -37,6 +77,7 @@ export function AuthorProfile({ pubkey: _pubkey, npub, t, onClose, onFollow, onU
     const [unfollowedLocal, setUnfollowedLocal] = useState(false);
     const [confirmUnfollow, setConfirmUnfollow] = useState(false);
     const [npubCopied, setNpubCopied] = useState(false);
+    const [reputation, setReputation] = useState<ReputationData | null>(null);
 
     const copyNpub = () => {
         navigator.clipboard.writeText(npub);
@@ -46,6 +87,12 @@ export function AuthorProfile({ pubkey: _pubkey, npub, t, onClose, onFollow, onU
 
     useEffect(() => {
         fetchProfile(_pubkey, p => setProfile(p as Record<string, string>));
+    }, [_pubkey]);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetchReputation(_pubkey).then(r => { if (!cancelled) setReputation(r); }).catch(() => { /* ignore */ });
+        return () => { cancelled = true; };
     }, [_pubkey]);
 
     const name = profile.display_name || profile.name || npub.slice(0, 12) + '...';
@@ -92,6 +139,42 @@ export function AuthorProfile({ pubkey: _pubkey, npub, t, onClose, onFollow, onU
                         {profile.lud16 && <span className="about-client-pill" style={{ fontSize: '.8rem' }}><ZapIcon size={12} /> {profile.lud16}</span>}
                     </div>
                 )}
+
+                {/* Reputation pills */}
+                <div className="reputation-pills">
+                    {reputation ? (
+                        <>
+                            {reputation.nip05 && (
+                                <span className="about-client-pill rep-pill--verified" title={t.repNip05Badge || 'Verified NIP-05'}>
+                                    <ShieldCheckIcon size={11} /> {t.repTierVerified || 'Verified'}
+                                </span>
+                            )}
+                            {reputation.followers > 0 && (
+                                <span className="about-client-pill">
+                                    <UsersIcon size={11} /> {reputation.followers} {t.repFollowers || 'followers'}
+                                </span>
+                            )}
+                            {reputation.zapCount > 0 && (
+                                <span className="about-client-pill">
+                                    <ZapIcon size={11} /> {reputation.zapCount} {t.repZapsReceived || 'zaps'}
+                                </span>
+                            )}
+                            {reputation.reactionCount > 0 && (
+                                <span className="about-client-pill">
+                                    <StarIcon size={11} /> {reputation.reactionCount} {t.repReactions || 'reactions'}
+                                </span>
+                            )}
+                            {reputation.disputeCount > 0 && (
+                                <span className="about-client-pill rep-pill--arbiter" title={t.repDisputesResolved || 'disputes resolved'}>
+                                    <ScaleIcon size={11} /> {reputation.disputeCount} {t.repDisputesResolved || 'disputes resolved'}
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        <div className="rep-loading-bar" />
+                    )}
+                </div>
+
                 <div style={{ display: 'flex', gap: '.6rem', marginTop: '1.2rem' }}>
                     {(!isFollowed || unfollowedLocal) && (
                         <button
@@ -264,6 +347,7 @@ export function NoteCard({
                         );
                     })()}
                     {hasName && <span className="author-name">{displayName}</span>}
+                    <ReputationBadge tier={computeTierFromProfile(profile)} t={t} />
                     <span className="author-npub">{npubShort}</span>
                 </div>
                 <div className="note-meta">

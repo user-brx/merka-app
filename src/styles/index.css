@@ -3240,3 +3240,103 @@ textarea {
     z-index: 3000;
   }
 }
+
+/* ── Reputation ──────────────────────────────────────────────────────────────── */
+
+.rep-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-inline-start: 0.2rem;
+  vertical-align: middle;
+}
+
+.rep-badge--trusted {
+  color: var(--purple);
+}
+
+.rep-badge--verified {
+  color: var(--primary);
+}
+
+.rep-badge--active {
+  color: var(--text-muted);
+}
+
+.reputation-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  min-height: 1.4rem;
+}
+
+.rep-pill--verified {
+  color: var(--primary);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.rep-pill--arbiter {
+  color: var(--accent);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.rep-loading-bar {
+  height: 0.7rem;
+  width: 8rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: rep-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes rep-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+.profile-reputation-section {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.rep-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.rep-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+/* Mobile: pills wrap, font smaller */
+@media (max-width: 600px) {
+  .reputation-pills {
+    gap: 0.3rem;
+  }
+
+  .reputation-pills .about-client-pill {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .rep-badge {
+    margin-inline-start: 0.15rem;
+  }
+
+  .rep-stats-grid {
+    gap: 0.4rem;
+  }
+}

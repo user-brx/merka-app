@@ -196,3 +196,28 @@ export const PlusIcon = ({ size = 16 }: { size?: number }) => (
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
+
+// --- Reputation ---
+
+export const ShieldCheckIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} {...SVG_PROPS}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <polyline points="9 12 11 14 15 10" />
+  </svg>
+);
+
+export const StarIcon = ({ size = 14, filled = false }: { size?: number; filled?: boolean }) => (
+  <svg width={size} height={size} {...SVG_PROPS} fill={filled ? 'currentColor' : 'none'}>
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+export const ScaleIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} {...SVG_PROPS}>
+    <path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z" />
+    <path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z" />
+    <path d="M7 21h10" />
+    <line x1="12" y1="3" x2="12" y2="21" />
+    <path d="M3 7h2c2 0 4-1 7-1s5 1 7 1h2" />
+  </svg>
+);

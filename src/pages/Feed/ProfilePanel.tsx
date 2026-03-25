@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Translations } from '../../i18n/translations';
-import { fetchProfile, publishProfile } from '../../services/nostr/nostr';
-import { CopyIcon, EditIcon, ExternalLinkIcon, HelpCircleIcon, LogoutIcon, XIcon } from '../../components/ui/icons';
+import { fetchProfile, publishProfile, fetchReputation } from '../../services/nostr/nostr';
+import type { ReputationData } from '../../services/nostr/reputation';
+import { CopyIcon, EditIcon, ExternalLinkIcon, HelpCircleIcon, LogoutIcon, XIcon, ShieldCheckIcon, StarIcon, UsersIcon, ZapIcon, ScaleIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
 
 interface ProfileData { name?: string; display_name?: string; about?: string; picture?: string; website?: string; lud16?: string; nip05?: string; bitcoin?: string; }
@@ -23,9 +24,16 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast, onLogout }: 
   const [nsecCopied, setNsecCopied] = useState(false);
   const [npubCopied, setNpubCopied] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [reputation, setReputation] = useState<ReputationData | null>(null);
 
   useEffect(() => {
     fetchProfile(keys.pk, (p: unknown) => setProfile(p as ProfileData));
+  }, [keys.pk]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReputation(keys.pk).then(r => { if (!cancelled) setReputation(r); }).catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
   }, [keys.pk]);
 
   const field = (label: string, key: keyof ProfileData, placeholder = '', help?: string) => (
@@ -122,6 +130,58 @@ export function ProfilePanel({ t, keys, onClose, onUpdate, onToast, onLogout }: 
             <div className="fields-divider" />
             {field(t.bio, 'about', t.bioPlaceholder || 'A brief description about yourself...')}
           </div>
+        </div>
+
+        {/* Reputation section */}
+        <div className="profile-reputation-section">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.75rem' }}>
+            {reputation?.tier === 'trusted' || reputation?.tier === 'verified'
+              ? <ShieldCheckIcon size={16} />
+              : <StarIcon size={16} />
+            }
+            <span style={{ fontWeight: 600, fontSize: '.9rem' }}>
+              {reputation
+                ? (reputation.tier === 'trusted' ? (t.repTierTrusted || 'Trusted')
+                  : reputation.tier === 'verified' ? (t.repTierVerified || 'Verified')
+                  : reputation.tier === 'active' ? (t.repTierActive || 'Active')
+                  : (t.repTierNew || 'New'))
+                : '…'
+              }
+            </span>
+          </div>
+          {reputation ? (
+            <div className="rep-stats-grid">
+              <div className="rep-stat-item">
+                <UsersIcon size={14} />
+                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.followers}</span>
+                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repFollowers || 'followers'}</span>
+              </div>
+              <div className="rep-stat-item">
+                <UsersIcon size={14} />
+                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.following}</span>
+                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.following || 'following'}</span>
+              </div>
+              <div className="rep-stat-item">
+                <ZapIcon size={14} />
+                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.zapCount}</span>
+                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repZapsReceived || 'zaps'}</span>
+              </div>
+              <div className="rep-stat-item">
+                <StarIcon size={14} />
+                <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.reactionCount}</span>
+                <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repReactions || 'reactions'}</span>
+              </div>
+              {reputation.disputeCount > 0 && (
+                <div className="rep-stat-item">
+                  <ScaleIcon size={14} />
+                  <span style={{ fontWeight: 700, fontSize: '1rem' }}>{reputation.disputeCount}</span>
+                  <span style={{ fontSize: '.72rem', color: 'var(--text-muted)' }}>{t.repDisputesResolved || 'disputes'}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rep-loading-bar" />
+          )}
         </div>
 
         <div className="modal-actions profile-modal-actions">
