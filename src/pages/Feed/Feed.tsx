@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo, type FormEvent } from 'react';
+import React, { useRef } from 'react';
 import type { Translations, LangCode } from '../../i18n/translations';
 import { NoteCard, type NostrEvent } from '../../components/feed/NoteCard';
-import {
-  subscribeToNotes,
-  subscribeToUserNotes,
-  subscribeToFollowingNotes,
-  searchNostrNotes,
-  publishNote,
-  publishFollowList,
-  fetchNotesBatch
-} from '../../services/nostr/nostr';
-import { APP_GUID, MERKA_PUBKEY, GITHUB_REPO, GITHUB_PAGES, MERKA_NPUB } from '../../config/constants';
 import { SearchIcon, PlusIcon, XIcon, RefreshCwIcon, GlobeIcon } from '../../components/ui/icons';
 import { useDragToClose } from '../../hooks/useDragToClose';
+import { useFeedNotes } from './hooks/useFeedNotes';
+import { usePullToRefresh } from './hooks/usePullToRefresh';
+import { useSearch, parseMerkaContent } from './hooks/useSearch';
+import { useCompose } from './hooks/useCompose';
 
 export interface FeedProps {
   t: Translations;
@@ -34,287 +28,44 @@ export function Feed({
   t, lang, keys, followedPks, setFollowedPks, likedIds,
   showGlobalToast, onLike, onFollow, onUnfollow, onOpenChat, onOpenZap
 }: FeedProps) {
-  const [globalNotes, setGlobalNotes] = useState<NostrEvent[]>([]);
-  const [userNotes, setUserNotes] = useState<NostrEvent[]>([]);
-  const [followingNotes, setFollowingNotes] = useState<NostrEvent[]>([]);
-
-  // Search
-  const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('merka_search_query') || '');
-  const [searchFilterType, setSearchFilterType] = useState<'all' | 'buy' | 'sell'>(() => {
-    const saved = localStorage.getItem('merka_search_type');
-    return (saved === 'buy' || saved === 'sell') ? saved : 'all';
-  });
-  const [searchFilterLang, setSearchFilterLang] = useState<'all' | 'current'>(() => {
-    const saved = localStorage.getItem('merka_search_lang');
-    return saved === 'current' ? 'current' : 'all';
-  });
-  const [searchFilterTag, setSearchFilterTag] = useState(() => localStorage.getItem('merka_search_tag') || 'all');
-  const [isTagOpen, setIsTagOpen] = useState(false);
-  const [tagInputValue, setTagInputValue] = useState('');
-  const tagDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (tagDropdownRef.current && !tagDropdownRef.current.contains(event.target as Node)) {
-        setTimeout(() => setIsTagOpen(false), 150);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const [searchResults, setSearchResults] = useState<NostrEvent[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchAbortRef = useRef<(() => void) | null>(null);
   const feedColumnRef = useRef<HTMLDivElement>(null);
-  const [composeOpen, setComposeOpen] = useState(false);
-  const composeTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    globalNotes, userNotes, followingNotes,
+    activeTab, setActiveTab,
+    isLoadingMore, hasMerkaTag,
+    addGlobalNote, loadMore24h,
+  } = useFeedNotes(keys, followedPks);
+
+  const {
+    pullMoveY, isRefreshing,
+    handleTouchStart, handleTouchMove, handleTouchEnd,
+  } = usePullToRefresh(feedColumnRef, addGlobalNote);
+
+  const {
+    searchQuery, setSearchQuery,
+    searchFilterType, setSearchFilterType,
+    searchFilterLang, setSearchFilterLang,
+    searchFilterTag, setSearchFilterTag,
+    isTagOpen, setIsTagOpen,
+    tagInputValue, setTagInputValue,
+    tagDropdownRef,
+    searchResults, setSearchResults,
+    isSearching, setIsSearching,
+    filteredTagSuggestions,
+    handleNostrSearch, clearSearch,
+    isPostFiltered, extractMsg,
+  } = useSearch(lang, hasMerkaTag, globalNotes, userNotes, followingNotes);
+
+  const {
+    newPost, setNewPost,
+    postType, setPostType,
+    postTag, setPostTag,
+    publishing, composeOpen, setComposeOpen,
+    composeTextareaRef, handlePost,
+  } = useCompose(keys, lang, t, followedPks, setFollowedPks, showGlobalToast);
+
   const composeDragProps = useDragToClose(() => setComposeOpen(false));
-
-  // Pull to refresh state
-  const [pullStartY, setPullStartY] = useState<number | null>(null);
-  const [pullMoveY, setPullMoveY] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // iOS Safari: focus after animation completes to avoid cursor misposition bug
-  useEffect(() => {
-    if (!composeOpen) return;
-    const timer = setTimeout(() => {
-      composeTextareaRef.current?.focus();
-    }, 260); // slightly after compose-slide-down (250ms)
-    return () => clearTimeout(timer);
-  }, [composeOpen]);
-
-  useEffect(() => {
-    localStorage.setItem('merka_search_tag', searchFilterTag);
-  }, [searchFilterTag]);
-  useEffect(() => {
-    localStorage.setItem('merka_search_query', searchQuery);
-    localStorage.setItem('merka_search_type', searchFilterType);
-    localStorage.setItem('merka_search_lang', searchFilterLang);
-  }, [searchQuery, searchFilterType, searchFilterLang]);
-
-  const [newPost, setNewPost] = useState('');
-  const [postType, setPostType] = useState<'buy' | 'sell'>(() => {
-    const saved = localStorage.getItem('merka_post_type');
-    return (saved === 'buy' || saved === 'sell') ? saved : 'sell';
-  });
-  const [postTag, setPostTag] = useState(() => localStorage.getItem('merka_post_tag') || '');
-  const [publishing, setPublishing] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('merka_post_type', postType);
-    localStorage.setItem('merka_post_tag', postTag);
-  }, [postType, postTag]);
-
-  const [activeTab, setActiveTab] = useState<'merka' | 'following' | 'mine'>('merka');
-
-  // Pagination
-  const [merkaWindowStart, setMerkaWindowStart] = useState(() => Math.floor(Date.now() / 1000) - 86400);
-  const [followingWindowStart, setFollowingWindowStart] = useState(() => Math.floor(Date.now() / 1000) - 86400);
-  const [mineWindowStart, setMineWindowStart] = useState(() => Math.floor(Date.now() / 1000) - 86400);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const hasMerkaTag = (n: NostrEvent) => n.tags.some(tag => tag[0] === 't' && tag[1] === APP_GUID);
-
-  // Initial batch load on mount — relays don't always return history via subscriptions
-  useEffect(() => {
-    const since = Math.floor(Date.now() / 1000) - 86400;
-    const until = Math.floor(Date.now() / 1000);
-    fetchNotesBatch({
-      since,
-      until,
-      onEvent: (ev: NostrEvent) => {
-        if (!ev.tags.some(tag => tag[0] === 't' && tag[1] === APP_GUID)) return;
-        setGlobalNotes(prev => {
-          if (prev.some(n => n.id === ev.id)) return prev;
-          return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
-        });
-      },
-      onDone: () => {},
-    });
-  }, []);
-
-  // Global / Merka feed
-  useEffect(() => {
-    const since24h = Math.floor(Date.now() / 1000) - 86400;
-    const unsub = subscribeToNotes((ev) => {
-      setGlobalNotes(prev => {
-        if (prev.some(n => n.id === ev.id)) return prev;
-        return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
-      });
-    }, since24h);
-    return () => unsub();
-  }, []);
-
-  // My posts
-  useEffect(() => {
-    const myPk = keys.pk;
-    const since24h = Math.floor(Date.now() / 1000) - 86400;
-    const unsub = subscribeToUserNotes(myPk, (ev) => {
-      if (ev.pubkey !== myPk || !hasMerkaTag(ev)) return;
-      setUserNotes(prev => {
-        if (prev.some(n => n.id === ev.id)) return prev;
-        return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 100);
-      });
-    }, since24h);
-    return () => unsub();
-  }, [keys]);
-
-  // Following feed
-  useEffect(() => {
-    setFollowingNotes([]); // eslint-disable-line react-hooks/set-state-in-effect
-    if (!followedPks.size) return;
-    const pks = Array.from(followedPks);
-    const since24h = Math.floor(Date.now() / 1000) - 86400;
-    const unsub = subscribeToFollowingNotes(pks, (ev) => {
-      if (!followedPks.has(ev.pubkey) || ev.pubkey === keys.pk || !hasMerkaTag(ev)) return;
-      setFollowingNotes(prev => {
-        if (prev.some(n => n.id === ev.id)) return prev;
-        return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
-      });
-    }, since24h);
-    return () => unsub();
-  }, [followedPks, keys.pk]);
-
-  const handleNostrSearch = () => {
-    const q = searchQuery.trim();
-    if (!q) return;
-    if (searchAbortRef.current) { searchAbortRef.current(); searchAbortRef.current = null; }
-    setSearchResults([]);
-    setIsSearching(true);
-    const close = searchNostrNotes({
-      query: q,
-      onEvent: ev => {
-        if (!hasMerkaTag(ev)) return;
-        setSearchResults(prev => prev.some(n => n.id === ev.id) ? prev : [ev, ...prev]);
-      },
-      onDone: () => setIsSearching(false),
-    });
-    searchAbortRef.current = close;
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
-    setIsSearching(false);
-    if (searchAbortRef.current) { searchAbortRef.current(); searchAbortRef.current = null; }
-  };
-
-  const handlePost = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!newPost.trim()) return;
-    setPublishing(true);
-
-    if (!followedPks.has(MERKA_PUBKEY)) {
-      const nextFollow = new Set(followedPks);
-      nextFollow.add(MERKA_PUBKEY);
-      setFollowedPks(nextFollow);
-      localStorage.setItem('merka_following', JSON.stringify(Array.from(nextFollow)));
-      publishFollowList(keys.sk, Array.from(nextFollow));
-    }
-
-    const eventTags = [
-      ['t', APP_GUID],
-      ['l', lang, 'ISO-639-1']
-    ];
-
-    const normalizedTag = postTag.trim().toLowerCase().slice(0, 10);
-    if (normalizedTag) {
-      eventTags.push(['t', normalizedTag]);
-    }
-
-    const footerText = `\n\n---\n📦 Code: ${GITHUB_REPO}\n🌐 Web: ${GITHUB_PAGES}\n⚡ Nostr: nostr:${MERKA_NPUB}`;
-    const payload = JSON.stringify({
-      type: postType,
-      msg: newPost.trim(),
-      lang
-    }) + footerText;
-
-    const success = await publishNote(keys.sk, payload, eventTags);
-    if (success) {
-      setNewPost('');
-      setComposeOpen(false);
-      showGlobalToast("Publicado com sucesso!");
-    } else {
-      alert(t.publishFail);
-    }
-    setPublishing(false);
-  };
-
-  const loadMore24h = (tab: 'merka' | 'following' | 'mine') => {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    const windowStart = tab === 'merka' ? merkaWindowStart : tab === 'following' ? followingWindowStart : mineWindowStart;
-    const newWindowStart = windowStart - 86400;
-    const authors = tab === 'following' ? Array.from(followedPks) : tab === 'mine' ? [keys.pk] : undefined;
-    fetchNotesBatch({
-      since: newWindowStart,
-      until: windowStart - 1,
-      authors,
-      onEvent: (ev: NostrEvent) => {
-        if (!hasMerkaTag(ev)) return;
-        if (tab === 'following' && (!followedPks.has(ev.pubkey) || ev.pubkey === keys.pk)) return;
-        if (tab === 'mine' && (ev.pubkey !== keys.pk)) return;
-        const setter = tab === 'merka' ? setGlobalNotes : tab === 'following' ? setFollowingNotes : setUserNotes;
-        setter(prev => {
-          if (prev.some(n => n.id === ev.id)) return prev;
-          return [...prev, ev].sort((a, b) => b.created_at - a.created_at);
-        });
-      },
-      onDone: () => {
-        if (tab === 'merka') setMerkaWindowStart(newWindowStart);
-        else if (tab === 'following') setFollowingWindowStart(newWindowStart);
-        else setMineWindowStart(newWindowStart);
-        setIsLoadingMore(false);
-      }
-    });
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (feedColumnRef.current && feedColumnRef.current.scrollTop === 0) {
-      setPullStartY(e.touches[0].clientY);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (pullStartY !== null && feedColumnRef.current && feedColumnRef.current.scrollTop === 0) {
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - pullStartY;
-      if (diff > 0) {
-        setPullMoveY(Math.min(diff, 60)); // max pull distance
-        if (e.cancelable) e.preventDefault();
-      } else {
-        setPullStartY(null);
-        setPullMoveY(0);
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (pullMoveY >= 50 && !isRefreshing) {
-      setIsRefreshing(true);
-      setPullStartY(null);
-      setPullMoveY(0); // spring back immediately; indicator stays via isRefreshing
-      const windowStart = Math.floor(Date.now() / 1000) - 86400;
-      const until = Math.floor(Date.now() / 1000);
-      fetchNotesBatch({
-        since: windowStart,
-        until,
-        onEvent: (ev: NostrEvent) => {
-          if (!hasMerkaTag(ev)) return;
-          setGlobalNotes(prev => {
-            if (prev.some(n => n.id === ev.id)) return prev;
-            return [ev, ...prev].sort((a, b) => b.created_at - a.created_at).slice(0, 200);
-          });
-        },
-        onDone: () => setIsRefreshing(false)
-      });
-    } else {
-      setPullStartY(null);
-      setPullMoveY(0);
-    }
-  };
 
   const formatTime = (ts: number) => {
     const d = new Date(ts * 1000);
@@ -322,25 +73,6 @@ export function Feed({
     const sameDay = d.toDateString() === now.toDateString();
     if (sameDay) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const parseMerkaContent = (content: string) => {
-    try { return JSON.parse(content); } catch { /* noop */ }
-    const splitIdx = content.indexOf('\n\n---\n📦 Code:');
-    if (splitIdx !== -1) {
-      try { return JSON.parse(content.substring(0, splitIdx)); } catch { /* noop */ }
-    }
-    const lastBraceIdx = content.lastIndexOf('}');
-    if (lastBraceIdx !== -1) {
-      try { return JSON.parse(content.substring(0, lastBraceIdx + 1)); } catch { /* noop */ }
-    }
-    return null;
-  };
-
-  const extractMsg = (content: string): string => {
-    const data = parseMerkaContent(content);
-    if (data && typeof data.msg === 'string') return data.msg;
-    return content;
   };
 
   const renderNoteContent = (content: string): React.ReactNode => {
@@ -351,41 +83,9 @@ export function Feed({
 
   const extractNoteType = (content: string): 'buy' | 'sell' | null => {
     const data = parseMerkaContent(content);
-    if (data?.type === 'buy' || data?.type === 'sell') return data.type;
+    if (data?.type === 'buy' || data?.type === 'sell') return data.type as 'buy' | 'sell';
     return null;
   };
-
-  const isPostFiltered = (n: NostrEvent) => {
-    if (searchFilterTag !== 'all') {
-      const hasSecondaryTag = n.tags.some(tag => tag[0] === 't' && tag[1] === searchFilterTag);
-      if (!hasSecondaryTag) return false;
-    }
-    if (searchFilterType === 'all' && searchFilterLang === 'all') return true;
-    
-    const d = parseMerkaContent(n.content);
-    if (!d) return false;
-    if (searchFilterType !== 'all' && d.type !== searchFilterType) return false;
-    if (searchFilterLang === 'current' && d.lang !== lang) return false;
-    return true;
-  };
-
-  const globalTags = useMemo(() => {
-    const subset = new Set<string>();
-    const allNotes = [...globalNotes, ...followingNotes, ...userNotes, ...searchResults];
-    allNotes.forEach(n => {
-      n.tags.forEach(tag => {
-        if (tag[0] === 't' && tag[1] && tag[1] !== APP_GUID) {
-          subset.add(tag[1].toLowerCase());
-        }
-      });
-    });
-    return Array.from(subset).sort();
-  }, [globalNotes, followingNotes, userNotes, searchResults]);
-
-  const filteredTagSuggestions = useMemo(() => {
-    if (!tagInputValue) return globalTags;
-    return globalTags.filter(t => t.includes(tagInputValue.toLowerCase()));
-  }, [globalTags, tagInputValue]);
 
   const displayedGlobal = globalNotes.filter(n => hasMerkaTag(n) && isPostFiltered(n));
   const displayedFollowing = followingNotes.filter(n => hasMerkaTag(n) && followedPks.has(n.pubkey) && n.pubkey !== keys.pk && isPostFiltered(n));
@@ -394,292 +94,262 @@ export function Feed({
   const noteCardShared = {
     t, myKeys: keys, likedIds, followedPks,
     onLike, onFollow, onUnfollow,
-    onOpenChat,
-    onOpenZap,
+    onOpenChat, onOpenZap,
     formatTime, renderContent: renderNoteContent, extractNoteType,
   };
 
   return (
     <>
       <div className="feed-fab-wrapper">
-      <section className="glass-panel feed-panel">
-        <div className="feed-tabs-row">
-          <div className="feed-tabs">
-            {(['merka', 'following', 'mine'] as const).map(tab => (
-              <button key={tab}
-                className={`feed-tab${activeTab === tab ? ' active' : ''}`}
-                onClick={() => setActiveTab(tab)}
-                title={tab === 'merka' ? t.hintMerka : tab === 'following' ? t.hintFollowing : t.hintMine}
-              >
-                {tab === 'merka' ? <><GlobeIcon size={13} /> Merka</> : tab === 'following' ? '👥 ' + t.followingFeed : '👤 ' + t.myFeed}
-              </button>
-            ))}
+        <section className="glass-panel feed-panel">
+          <div className="feed-tabs-row">
+            <div className="feed-tabs">
+              {(['merka', 'following', 'mine'] as const).map(tab => (
+                <button key={tab}
+                  className={`feed-tab${activeTab === tab ? ' active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                  title={tab === 'merka' ? t.hintMerka : tab === 'following' ? t.hintFollowing : t.hintMine}
+                >
+                  {tab === 'merka' ? <><GlobeIcon size={13} /> Merka</> : tab === 'following' ? '👥 ' + t.followingFeed : '👤 ' + t.myFeed}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="search-filters-group" style={{ position: 'relative', zIndex: 1100 }}>
-        <div className="search-bar-row">
-          <div className="search-input-wrap" style={{ flex: 1, minWidth: '150px' }}>
-            <span className="search-icon"><SearchIcon size={14} /></span>
-            <input
-              className="search-input"
-              placeholder={t.searchPlaceholder}
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setSearchResults([]); setIsSearching(false); }}
-              onKeyDown={e => e.key === 'Enter' && handleNostrSearch()}
-            />
-            {searchQuery && (
-              <button className="search-clear-btn" onClick={clearSearch} title={t.clearSearch}>✕</button>
-            )}
-          </div>
-          {searchQuery.trim() && (
-            <button className="search-nostr-btn" onClick={handleNostrSearch} disabled={isSearching}>
-              {isSearching ? '⏳' : '🌐'} {isSearching ? t.searchSearching : t.searchNostr}
-            </button>
-          )}
-          <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div ref={tagDropdownRef} style={{ position: 'relative', zIndex: 1100 }}>
-            <button
-              className="tag-select"
-              onClick={() => { setIsTagOpen(o => !o); setTagInputValue(''); }}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '90px', justifyContent: 'space-between' }}
-            >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {searchFilterTag === 'all' ? (t.allTags || 'All tags') : `#${searchFilterTag}`}
-              </span>
-              {searchFilterTag !== 'all'
-                ? <span onClick={e => { e.stopPropagation(); setSearchFilterTag('all'); setIsTagOpen(false); }} style={{ opacity: 0.6, fontSize: '0.6rem', flexShrink: 0 }}>✕</span>
-                : <span style={{ opacity: 0.4, fontSize: '0.5rem', flexShrink: 0 }}>▼</span>
-              }
-            </button>
-            {isTagOpen && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '3px', background: '#070d1a', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1100, display: 'flex', flexDirection: 'column', width: '110px', padding: '3px', boxShadow: '0 10px 24px rgba(0,0,0,0.85)', maxHeight: '180px', overflowY: 'auto' }}>
+          <div className="search-filters-group" style={{ position: 'relative', zIndex: 1100 }}>
+            <div className="search-bar-row">
+              <div className="search-input-wrap" style={{ flex: 1, minWidth: '150px' }}>
+                <span className="search-icon"><SearchIcon size={14} /></span>
                 <input
-                  autoFocus
-                  className="tag-dropdown-search"
-                  placeholder={t.tagFilterPlaceholder}
-                  value={tagInputValue}
-                  onChange={e => setTagInputValue(e.target.value.replace(/[^a-z0-9-]/gi, '').toLowerCase())}
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-color)', borderRadius: '5px', color: 'var(--text-main)', fontSize: '0.62rem', padding: '3px 6px', outline: 'none', marginBottom: '2px', width: '100%', boxSizing: 'border-box' }}
+                  className="search-input"
+                  placeholder={t.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setSearchResults([]); setIsSearching(false); }}
+                  onKeyDown={e => e.key === 'Enter' && handleNostrSearch()}
                 />
-                <button
-                  className="lang-dropdown-item"
-                  onClick={() => { setSearchFilterTag('all'); setIsTagOpen(false); }}
-                  style={{ background: searchFilterTag === 'all' ? 'rgba(59,130,246,0.18)' : 'transparent', border: 'none', color: searchFilterTag === 'all' ? 'var(--primary)' : 'var(--text-muted)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', fontSize: '0.62rem', fontStyle: 'italic' }}
-                >{t.allTags || 'All tags'}</button>
-                {filteredTagSuggestions.map(tag => (
-                  <button
-                    key={tag}
-                    className="lang-dropdown-item"
-                    onClick={() => { setSearchFilterTag(tag); setIsTagOpen(false); setTagInputValue(''); }}
-                    style={{ background: searchFilterTag === tag ? 'rgba(59,130,246,0.18)' : 'transparent', border: 'none', color: searchFilterTag === tag ? 'var(--primary)' : 'var(--text-main)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', fontSize: '0.62rem', display: 'flex', gap: '4px', alignItems: 'center' }}
-                  ><span style={{ opacity: 0.4, fontSize: '0.55rem' }}>#</span>{tag}</button>
-                ))}
-                {filteredTagSuggestions.length === 0 && (
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', padding: '4px 6px', fontStyle: 'italic' }}>{t.noTagsFound}</span>
+                {searchQuery && (
+                  <button className="search-clear-btn" onClick={clearSearch} title={t.clearSearch}>✕</button>
                 )}
               </div>
-            )}
-            </div>
-            <button
-              className="filter-chip"
-              onClick={() => setSearchFilterType(prev => prev === 'buy' ? 'all' : 'buy')}
-              style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterType === 'buy' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterType === 'buy' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >{t.buy}</button>
-            <button
-              className="filter-chip"
-              onClick={() => setSearchFilterType(prev => prev === 'sell' ? 'all' : 'sell')}
-              style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterType === 'sell' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterType === 'sell' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >{t.sell}</button>
-            <button
-              className="filter-chip"
-              onClick={() => setSearchFilterLang(prev => prev === 'all' ? 'current' : 'all')}
-              style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterLang === 'current' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterLang === 'current' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              {searchFilterLang === 'all' ? t.langAll : <>{t.langCurrent}: {lang.toUpperCase()}</>}
-            </button></div>
-        </div>
-        </div>
-
-        {/* Pull-to-refresh indicator — sits above feed-column, collapses to 0 when idle */}
-        <div
-          className="pull-refresh-bar"
-          style={
-            isRefreshing
-              ? { height: '44px', opacity: 1 }
-              : { height: `${Math.min(pullMoveY, 44)}px`, opacity: Math.min(pullMoveY / 40, 1) }
-          }
-          aria-hidden="true"
-        >
-          <div className={`pull-refresh-icon${isRefreshing ? ' spinning' : ''}`}>
-            <RefreshCwIcon size={20} />
-          </div>
-        </div>
-
-        <div
-          className="feed-column"
-          ref={feedColumnRef}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          style={
-            pullMoveY > 0
-              ? { transform: `translateY(${pullMoveY}px)`, transition: 'none' }
-              : { transform: 'translateY(0)', transition: 'transform 0.3s ease' }
-          }
-        >
-          {searchQuery.trim() ? (
-            (() => {
-              const allLoaded = [...new Map([
-                ...globalNotes, ...followingNotes, ...userNotes,
-              ].map(n => [n.id, n])).values()];
-              const q = searchQuery.toLowerCase();
-              const clientFiltered = allLoaded.filter(n =>
-                extractMsg(n.content).toLowerCase().includes(q)
-              );
-              let merged = [...new Map([
-                ...searchResults, ...clientFiltered,
-              ].map(n => [n.id, n])).values()]
-                .sort((a, b) => b.created_at - a.created_at);
-
-              if (activeTab === 'following') {
-                merged = merged.filter(n => followedPks.has(n.pubkey) && n.pubkey !== keys.pk);
-              } else if (activeTab === 'mine') {
-                merged = merged.filter(n => n.pubkey === keys.pk);
-              }
-
-              merged = merged.filter(isPostFiltered);
-
-              return <>
-                <div className="search-results-header">
-                  {isSearching
-                    ? <span className="search-status-label">{t.searchSearching}</span>
-                    : <span className="search-status-label">
-                      <strong>{merged.length}</strong> {t.searchResults}
+              {searchQuery.trim() && (
+                <button className="search-nostr-btn" onClick={handleNostrSearch} disabled={isSearching}>
+                  {isSearching ? '⏳' : '🌐'} {isSearching ? t.searchSearching : t.searchNostr}
+                </button>
+              )}
+              <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div ref={tagDropdownRef} style={{ position: 'relative', zIndex: 1100 }}>
+                  <button
+                    className="tag-select"
+                    onClick={() => { setIsTagOpen(o => !o); setTagInputValue(''); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '90px', justifyContent: 'space-between' }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {searchFilterTag === 'all' ? (t.allTags || 'All tags') : `#${searchFilterTag}`}
                     </span>
-                  }
-                </div>
-                {merged.length === 0 && !isSearching
-                  ? <p className="feed-empty">{t.searchEmpty}</p>
-                  : merged.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
-                }
-              </>;
-            })()
-          ) : (
-            <>
-              {activeTab === 'merka' && (
-                <>
-                  {displayedGlobal.length === 0
-                    ? <p className="feed-empty">{t.listening}</p>
-                    : displayedGlobal.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
-                  }
-                  <button className="load-more-btn" onClick={() => loadMore24h('merka')} disabled={isLoadingMore}>
-                    {isLoadingMore ? t.loading : t.loadMore24h}
-                  </button>
-                </>
-              )}
-              {activeTab === 'following' && (
-                followedPks.size === 0
-                  ? <p className="feed-empty">{t.noFollowing}</p>
-                  : <>
-                    {displayedFollowing.length === 0
-                      ? <p className="feed-empty">{t.listening}</p>
-                      : displayedFollowing.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
+                    {searchFilterTag !== 'all'
+                      ? <span onClick={e => { e.stopPropagation(); setSearchFilterTag('all'); setIsTagOpen(false); }} style={{ opacity: 0.6, fontSize: '0.6rem', flexShrink: 0 }}>✕</span>
+                      : <span style={{ opacity: 0.4, fontSize: '0.5rem', flexShrink: 0 }}>▼</span>
                     }
-                    <button className="load-more-btn" onClick={() => loadMore24h('following')} disabled={isLoadingMore}>
-                      {isLoadingMore ? t.loading : t.loadMore24h}
-                    </button>
-                  </>
-              )}
-              {activeTab === 'mine' && (
-                <>
-                  {displayedMine.length === 0
-                    ? <p className="feed-empty">{t.listening}</p>
-                    : displayedMine.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
-                  }
-                  <button className="load-more-btn" onClick={() => loadMore24h('mine')} disabled={isLoadingMore}>
-                    {isLoadingMore ? t.loading : t.loadMore24h}
                   </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* Floating Action Button */}
-      <button
-        className="fab-compose"
-        onClick={() => setComposeOpen(true)}
-        aria-label={t.newPost}
-      >
-        <PlusIcon size={24} />
-      </button>
-
-      {/* Compose Drawer */}
-      {composeOpen && (
-        <div className="compose-drawer glass-panel" onClick={e => e.stopPropagation()} {...composeDragProps}>
-          <div className="compose-drag-handle" />
-          <div className="compose-drawer-header">
-            <span className="compose-drawer-title">{t.newPost}</span>
-            <button
-              className="btn-icon"
-              onClick={() => setComposeOpen(false)}
-              aria-label={t.close}
-            >
-              <XIcon size={18} />
-            </button>
-          </div>
-          <form className="post-form" onSubmit={handlePost}>
-            <textarea
-              ref={composeTextareaRef}
-              placeholder={t.whatsOnMind}
-              value={newPost}
-              onChange={e => setNewPost(e.target.value)}
-              style={{ height: '96px', resize: 'none', fontSize: '16px' }}
-              disabled={publishing}
-            />
-            <div className="post-form-footer">
-              <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div className="post-type-toggle">
-                  <button
-                    type="button"
-                    className={`post-type-btn sell${postType === 'sell' ? ' active' : ''}`}
-                    onClick={() => setPostType('sell')}
-                    aria-label={t.sell}
-                  >
-                    📦<span className="btn-label"> {t.sell}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`post-type-btn buy${postType === 'buy' ? ' active' : ''}`}
-                    onClick={() => setPostType('buy')}
-                    aria-label={t.buy}
-                  >
-                    🛒<span className="btn-label"> {t.buy}</span>
-                  </button>
+                  {isTagOpen && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '3px', background: '#070d1a', border: '1px solid var(--border-color)', borderRadius: '8px', zIndex: 1100, display: 'flex', flexDirection: 'column', width: '110px', padding: '3px', boxShadow: '0 10px 24px rgba(0,0,0,0.85)', maxHeight: '180px', overflowY: 'auto' }}>
+                      <input
+                        autoFocus
+                        className="tag-dropdown-search"
+                        placeholder={t.tagFilterPlaceholder}
+                        value={tagInputValue}
+                        onChange={e => setTagInputValue(e.target.value.replace(/[^a-z0-9-]/gi, '').toLowerCase())}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-color)', borderRadius: '5px', color: 'var(--text-main)', fontSize: '0.62rem', padding: '3px 6px', outline: 'none', marginBottom: '2px', width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <button
+                        className="lang-dropdown-item"
+                        onClick={() => { setSearchFilterTag('all'); setIsTagOpen(false); }}
+                        style={{ background: searchFilterTag === 'all' ? 'rgba(59,130,246,0.18)' : 'transparent', border: 'none', color: searchFilterTag === 'all' ? 'var(--primary)' : 'var(--text-muted)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', fontSize: '0.62rem', fontStyle: 'italic' }}
+                      >{t.allTags || 'All tags'}</button>
+                      {filteredTagSuggestions.map(tag => (
+                        <button
+                          key={tag}
+                          className="lang-dropdown-item"
+                          onClick={() => { setSearchFilterTag(tag); setIsTagOpen(false); setTagInputValue(''); }}
+                          style={{ background: searchFilterTag === tag ? 'rgba(59,130,246,0.18)' : 'transparent', border: 'none', color: searchFilterTag === tag ? 'var(--primary)' : 'var(--text-main)', padding: '3px 6px', textAlign: 'left', borderRadius: '4px', cursor: 'pointer', fontSize: '0.62rem', display: 'flex', gap: '4px', alignItems: 'center' }}
+                        ><span style={{ opacity: 0.4, fontSize: '0.55rem' }}>#</span>{tag}</button>
+                      ))}
+                      {filteredTagSuggestions.length === 0 && (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.6rem', padding: '4px 6px', fontStyle: 'italic' }}>{t.noTagsFound}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  className="post-tag-input"
-                  maxLength={10}
-                  placeholder={t.tagPlaceholder || 'Tag (opt)'}
-                  value={postTag}
-                  onChange={e => setPostTag(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  style={{
-                    padding: '0.4rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem',
-                    border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card)',
-                    color: 'var(--text-main)', width: '90px'
-                  }}
-                />
-                <button type="submit" disabled={publishing || !newPost.trim()} className="btn-small">
-                  {publishing ? t.publishing : t.publishNote}
+                <button
+                  className="filter-chip"
+                  onClick={() => setSearchFilterType(prev => prev === 'buy' ? 'all' : 'buy')}
+                  style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterType === 'buy' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterType === 'buy' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)' }}
+                >{t.buy}</button>
+                <button
+                  className="filter-chip"
+                  onClick={() => setSearchFilterType(prev => prev === 'sell' ? 'all' : 'sell')}
+                  style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterType === 'sell' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterType === 'sell' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)' }}
+                >{t.sell}</button>
+                <button
+                  className="filter-chip"
+                  onClick={() => setSearchFilterLang(prev => prev === 'all' ? 'current' : 'all')}
+                  style={{ fontSize: '.72rem', padding: '.25rem .6rem', borderRadius: '14px', background: searchFilterLang === 'current' ? 'var(--primary)' : 'var(--bg-card)', color: searchFilterLang === 'current' ? '#fff' : 'var(--text-main)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  {searchFilterLang === 'all' ? t.langAll : <>{t.langCurrent}: {lang.toUpperCase()}</>}
                 </button>
               </div>
             </div>
-          </form>
-        </div>
-      )}
+          </div>
+
+          {/* Pull-to-refresh indicator */}
+          <div
+            className="pull-refresh-bar"
+            style={
+              isRefreshing
+                ? { height: '44px', opacity: 1 }
+                : { height: `${Math.min(pullMoveY, 44)}px`, opacity: Math.min(pullMoveY / 40, 1) }
+            }
+            aria-hidden="true"
+          >
+            <div className={`pull-refresh-icon${isRefreshing ? ' spinning' : ''}`}>
+              <RefreshCwIcon size={20} />
+            </div>
+          </div>
+
+          <div
+            className="feed-column"
+            ref={feedColumnRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={
+              pullMoveY > 0
+                ? { transform: `translateY(${pullMoveY}px)`, transition: 'none' }
+                : { transform: 'translateY(0)', transition: 'transform 0.3s ease' }
+            }
+          >
+            {searchQuery.trim() ? (
+              (() => {
+                const allLoaded = [...new Map([
+                  ...globalNotes, ...followingNotes, ...userNotes,
+                ].map(n => [n.id, n])).values()];
+                const q = searchQuery.toLowerCase();
+                const clientFiltered = allLoaded.filter(n => extractMsg(n.content).toLowerCase().includes(q));
+                let merged = [...new Map([
+                  ...searchResults, ...clientFiltered,
+                ].map(n => [n.id, n])).values()]
+                  .sort((a, b) => b.created_at - a.created_at);
+
+                if (activeTab === 'following') merged = merged.filter(n => followedPks.has(n.pubkey) && n.pubkey !== keys.pk);
+                else if (activeTab === 'mine') merged = merged.filter(n => n.pubkey === keys.pk);
+                merged = merged.filter(isPostFiltered);
+
+                return <>
+                  <div className="search-results-header">
+                    {isSearching
+                      ? <span className="search-status-label">{t.searchSearching}</span>
+                      : <span className="search-status-label"><strong>{merged.length}</strong> {t.searchResults}</span>
+                    }
+                  </div>
+                  {merged.length === 0 && !isSearching
+                    ? <p className="feed-empty">{t.searchEmpty}</p>
+                    : merged.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
+                  }
+                </>;
+              })()
+            ) : (
+              <>
+                {activeTab === 'merka' && (
+                  <>
+                    {displayedGlobal.length === 0
+                      ? <p className="feed-empty">{t.listening}</p>
+                      : displayedGlobal.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
+                    }
+                    <button className="load-more-btn" onClick={() => loadMore24h('merka')} disabled={isLoadingMore}>
+                      {isLoadingMore ? t.loading : t.loadMore24h}
+                    </button>
+                  </>
+                )}
+                {activeTab === 'following' && (
+                  followedPks.size === 0
+                    ? <p className="feed-empty">{t.noFollowing}</p>
+                    : <>
+                      {displayedFollowing.length === 0
+                        ? <p className="feed-empty">{t.listening}</p>
+                        : displayedFollowing.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
+                      }
+                      <button className="load-more-btn" onClick={() => loadMore24h('following')} disabled={isLoadingMore}>
+                        {isLoadingMore ? t.loading : t.loadMore24h}
+                      </button>
+                    </>
+                )}
+                {activeTab === 'mine' && (
+                  <>
+                    {displayedMine.length === 0
+                      ? <p className="feed-empty">{t.listening}</p>
+                      : displayedMine.map(note => <NoteCard key={note.id} note={note} {...noteCardShared} />)
+                    }
+                    <button className="load-more-btn" onClick={() => loadMore24h('mine')} disabled={isLoadingMore}>
+                      {isLoadingMore ? t.loading : t.loadMore24h}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Floating Action Button */}
+        <button className="fab-compose" onClick={() => setComposeOpen(true)} aria-label={t.newPost}>
+          <PlusIcon size={24} />
+        </button>
+
+        {/* Compose Drawer */}
+        {composeOpen && (
+          <div className="compose-drawer glass-panel" onClick={e => e.stopPropagation()} {...composeDragProps}>
+            <div className="compose-drag-handle" />
+            <div className="compose-drawer-header">
+              <span className="compose-drawer-title">{t.newPost}</span>
+              <button className="btn-icon" onClick={() => setComposeOpen(false)} aria-label={t.close}>
+                <XIcon size={18} />
+              </button>
+            </div>
+            <form className="post-form" onSubmit={handlePost}>
+              <textarea
+                ref={composeTextareaRef}
+                placeholder={t.whatsOnMind}
+                value={newPost}
+                onChange={e => setNewPost(e.target.value)}
+                style={{ height: '96px', resize: 'none', fontSize: '16px' }}
+                disabled={publishing}
+              />
+              <div className="post-form-footer">
+                <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div className="post-type-toggle">
+                    <button type="button" className={`post-type-btn sell${postType === 'sell' ? ' active' : ''}`} onClick={() => setPostType('sell')} aria-label={t.sell}>
+                      📦<span className="btn-label"> {t.sell}</span>
+                    </button>
+                    <button type="button" className={`post-type-btn buy${postType === 'buy' ? ' active' : ''}`} onClick={() => setPostType('buy')} aria-label={t.buy}>
+                      🛒<span className="btn-label"> {t.buy}</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    className="post-tag-input"
+                    maxLength={10}
+                    placeholder={t.tagPlaceholder || 'Tag (opt)'}
+                    value={postTag}
+                    onChange={e => setPostTag(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    style={{ padding: '0.4rem 0.6rem', borderRadius: '8px', fontSize: '0.8rem', border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card)', color: 'var(--text-main)', width: '90px' }}
+                  />
+                  <button type="submit" disabled={publishing || !newPost.trim()} className="btn-small">
+                    {publishing ? t.publishing : t.publishNote}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Compose Overlay */}
