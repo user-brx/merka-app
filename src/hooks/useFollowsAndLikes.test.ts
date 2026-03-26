@@ -15,7 +15,7 @@ import { publishReaction, publishFollowList, fetchFollowList } from '../services
 const KEYS = { sk: new Uint8Array(32), pk: 'aabbcc', nsec: 'nsec1', npub: 'npub1' };
 
 function makeEvent(id = 'ev1', pubkey = 'author1'): NostrEvent {
-  return { id, pubkey, content: '', created_at: 1000, tags: [], sig: '' };
+  return { id, pubkey, content: '', created_at: 1000, kind: 1, tags: [] };
 }
 
 function useHook(keysVal = KEYS) {

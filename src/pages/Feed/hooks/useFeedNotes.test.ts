@@ -20,7 +20,7 @@ function mergeNotes(prev: NostrEvent[], ev: NostrEvent, limit = 200): NostrEvent
 }
 
 function makeNote(id: string, tags: string[][] = [['t', APP_GUID]], created_at = 1000): NostrEvent {
-  return { id, pubkey: 'pk', content: '', created_at, tags, sig: '' };
+  return { id, pubkey: 'pk', content: '', created_at, kind: 1, tags };
 }
 
 describe('hasMerkaTag', () => {

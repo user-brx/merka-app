@@ -16,8 +16,8 @@ function makeNote(overrides: Partial<NostrEvent> = {}): NostrEvent {
     pubkey: 'pk1',
     content: JSON.stringify({ type: 'sell', msg: 'selling stuff', lang: 'pt' }),
     created_at: 1000,
+    kind: 1,
     tags: [['t', APP_GUID]],
-    sig: '',
     ...overrides,
   };
 }
@@ -117,7 +117,7 @@ describe('useSearch', () => {
   it('handleNostrSearch calls searchNostrNotes and populates results', () => {
     const mockNote = makeNote({ id: 'search1' });
     vi.mocked(searchNostrNotes).mockImplementation(({ onEvent, onDone }) => {
-      onEvent(mockNote);
+      onEvent(mockNote as never);
       onDone();
       return () => {};
     });
@@ -135,7 +135,7 @@ describe('useSearch', () => {
 
   it('clearSearch resets results and query', () => {
     vi.mocked(searchNostrNotes).mockImplementation(({ onEvent, onDone }) => {
-      onEvent(makeNote({ id: 'r1' }));
+      onEvent(makeNote({ id: 'r1' }) as never);
       onDone();
       return () => {};
     });
