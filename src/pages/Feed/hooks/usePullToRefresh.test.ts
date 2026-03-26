@@ -82,7 +82,7 @@ describe('usePullToRefresh', () => {
 
   it('calls fetchNotesBatch during refresh (tag filtering done internally)', () => {
     vi.mocked(fetchNotesBatch).mockImplementation(({ onEvent, onDone }) => {
-      onEvent?.({ id: 'ev1', pubkey: 'pk', content: '', created_at: 1, kind: 1, tags: [['t', 'merka-app-v1']] });
+      onEvent?.({ id: 'ev1', pubkey: 'pk', content: '', created_at: 1, kind: 1, tags: [['t', 'merka-app-v1']] } as never);
       onDone?.();
       return () => {};
     });
